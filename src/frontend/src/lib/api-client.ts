@@ -73,6 +73,7 @@ export interface DatePlanItem {
   location: string;
   description: string;
   tag: string;
+  durationMinutes?: number;
 }
 
 export interface DatePlanResponse {
@@ -80,6 +81,12 @@ export interface DatePlanResponse {
   theme: string;
   items: DatePlanItem[];
   icebreakerQuestions: string[];
+  appliedChanges?: string[];
+  preferredStartTime?: string | null;
+  requestedEndTime?: string | null;
+  requestedActivityCount?: number;
+  searchInterests?: string[];
+  sharedInterests?: string[];
   requestId: string;
 }
 

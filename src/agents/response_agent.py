@@ -54,6 +54,12 @@ def _date_output(state: AgentState) -> dict:
         "theme": state.plan.get("theme", ""),
         "items": state.plan.get("items", []),
         "icebreakerQuestions": state.plan.get("icebreakerQuestions", []),
+        "appliedChanges": state.plan.get("appliedChanges", []),
+        "preferredStartTime": state.plan.get("preferredStartTime"),
+        "requestedEndTime": state.plan.get("requestedEndTime"),
+        "requestedActivityCount": state.plan.get("requestedActivityCount"),
+        "searchInterests": state.plan.get("searchInterests", []),
+        "sharedInterests": state.plan.get("sharedInterests", []),
     }
 
 

@@ -124,6 +124,24 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
           </div>
         ) : datePlan ? (
           <div className="space-y-6">
+            {datePlan.appliedChanges?.length ? (
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+                <div className="text-xs font-semibold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" /> Dieu chinh cua agent
+                </div>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {datePlan.appliedChanges.map((change) => (
+                    <span
+                      key={change}
+                      className="rounded-full border border-primary/20 bg-background px-2.5 py-1 text-[11px] font-medium text-foreground/80"
+                    >
+                      {change}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             {/* Itinerary Timeline */}
             <div className="space-y-4">
               <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
@@ -151,6 +169,7 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
                       <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5 shrink-0 text-rose-500" />
                         <span>{item.location}</span>
+                        {item.durationMinutes ? <span>- {item.durationMinutes} phut</span> : null}
                       </div>
                       <p className="mt-2 text-xs leading-relaxed text-foreground/80">{item.description}</p>
                     </div>

@@ -1557,6 +1557,7 @@ def search_date_activities(
                     "city": activity_city,
                     "interests": list(activity.get("interests", [])),
                     "estimated_cost": estimated_cost,
+                    "duration_minutes": activity.get("duration_minutes"),
                     "indoor": activity["indoor"],
                 }
             )

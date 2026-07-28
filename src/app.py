@@ -14,6 +14,7 @@ import json
 import os
 import re
 import sys
+from collections import deque
 from dataclasses import dataclass
 from typing import Any
 
@@ -54,11 +55,16 @@ except ImportError:
     from providers import get_llm_provider  # type: ignore[no-redef]
     from tools import AVAILABLE_TOOLS  # type: ignore[no-redef]
 
+from multi_agent.builder import run_multi_agent_workflow
+from multi_agent.state import AgentState
+
 load_dotenv()
 
 DEFAULT_REQUESTER_ID = os.getenv("CUPID_DEMO_USER_ID", "USR001")
 TOOL_FAILURE_STATUSES = {"denied", "error"}
 PROFILE_STORE: dict[str, dict[str, Any]] = {}
+AGENT_TRACE_LIMIT = int(os.getenv("CUPID_AGENT_TRACE_LIMIT", "25"))
+AGENT_RUNS: deque[dict[str, Any]] = deque(maxlen=AGENT_TRACE_LIMIT)
 
 DIMENSION_LABELS = {
     "relationship_goal": "Mục tiêu mối quan hệ",
@@ -127,6 +133,137 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+def _model_dump(model: BaseModel) -> dict[str, Any]:
+    if hasattr(model, "model_dump"):
+        return model.model_dump()
+    return model.dict()
+
+
+def _state_trace_summary(state: AgentState) -> dict[str, Any]:
+    return {
+        "request_id": state.request_id,
+        "intent": state.intent,
+        "status": state.status,
+        "goal": state.goal,
+        "safety_verdict": state.safety_verdict,
+        "preflight_verdict": state.preflight_verdict,
+        "completed_agents": state.completed_agents,
+        "delegation_count": state.delegation_count,
+        "replan_count": state.replan_count,
+        "tool_calls_count": state.tool_calls_count,
+        "observations": state.observations,
+        "executed_actions": state.executed_actions,
+        "errors": state.errors,
+        "agent_results": state.agent_results,
+        "trace": state.trace,
+        "output": state.output,
+    }
+
+
+def _remember_agent_run(state: AgentState) -> None:
+    AGENT_RUNS.append(_state_trace_summary(state))
+
+
+def _run_api_workflow(
+    user_query: str,
+    *,
+    intent: str,
+    candidate_id: str | None = None,
+    city: str | None = None,
+    max_budget: int | None = None,
+    request_data: dict[str, Any] | None = None,
+) -> AgentState:
+    state = run_multi_agent_workflow(
+        user_query,
+        intent=intent,
+        user_id=DEFAULT_REQUESTER_ID,
+        candidate_id=candidate_id,
+        city=city,
+        max_budget=max_budget,
+        request_data=request_data,
+    )
+    _remember_agent_run(state)
+    return state
+
+
+def _raise_for_failed_workflow(state: AgentState) -> None:
+    if state.output:
+        return
+    latest_error = state.errors[-1] if state.errors else {}
+    raise HTTPException(
+        status_code=400,
+        detail={
+            "code": latest_error.get("code", "WORKFLOW_FAILED"),
+            "message": latest_error.get("message", "Multi-agent workflow failed."),
+            "requestId": state.request_id,
+        },
+    )
+
+
+def _with_request_id(payload: dict[str, Any], state: AgentState) -> dict[str, Any]:
+    return {**payload, "requestId": state.request_id}
+
+
+def _looks_like_date_planning(message: str) -> bool:
+    text = message.casefold()
+    markers = {
+        "date",
+        "dating",
+        "hen",
+        "hen ho",
+        "ke hoach",
+        "lap ke hoach",
+        "plan",
+        "activity",
+        "activities",
+        "budget",
+        "ngan sach",
+        "ngoai troi",
+        "trong nha",
+        "outdoor",
+        "indoor",
+    }
+    return any(marker in text for marker in markers)
+
+
+def _extract_budget_vnd(message: str) -> int | None:
+    text = message.casefold().replace(",", ".")
+    unit_match = re.search(
+        r"(\d+(?:\.\d+)?)\s*(k|nghin|nghìn|ngan|ngàn|trieu|triệu|m|vnd|đ|dong|đồng)\b",
+        text,
+    )
+    budget_match = re.search(
+        r"(?:budget|ngan sach|ngân sách|toi da|tối đa|duoi|dưới|khoang|khoảng)"
+        r"[^\d]{0,30}(\d+(?:\.\d+)?)\s*"
+        r"(k|nghin|nghìn|ngan|ngàn|trieu|triệu|m|vnd|đ|dong|đồng)?\b",
+        text,
+    )
+    match = unit_match or budget_match
+    if not match:
+        return None
+    amount = float(match.group(1))
+    unit = match.group(2) or ""
+    if unit in {"k", "nghin", "nghìn", "ngan", "ngàn"}:
+        amount *= 1000
+    elif unit in {"trieu", "triệu", "m"}:
+        amount *= 1_000_000
+    elif not unit and budget_match:
+        amount = amount * 1000 if amount < 10_000 else amount
+    return int(amount)
+
+
+def _date_plan_chat_reply(plan: dict[str, Any]) -> str:
+    items = plan.get("items") or []
+    if not items:
+        return "Date Planning Agent could not find a grounded date plan for this request."
+    lines = ["Date Planning Agent suggested this consent-aware plan:"]
+    for item in items[:3]:
+        lines.append(
+            f"- {item.get('time')}: {item.get('title')} ({item.get('location')})"
+        )
+    return "\n".join(lines)
 
 
 def load_test_cases() -> list[dict[str, Any]]:
@@ -474,6 +611,7 @@ def api_health() -> dict[str, Any]:
         "provider": get_llm_provider().__class__.__name__,
         "toolCount": len(AVAILABLE_TOOLS),
         "demoUserId": DEFAULT_REQUESTER_ID,
+        "multiAgent": True,
     }
 
 
@@ -484,29 +622,40 @@ def api_tools() -> dict[str, Any]:
 
 @app.post("/api/profile")
 def api_submit_profile(profile: ProfileRequest) -> dict[str, Any]:
-    PROFILE_STORE[profile.email.casefold()] = profile.model_dump()
-    return {
-        "success": True,
-        "profileId": DEFAULT_REQUESTER_ID,
-        "mode": "demo_fixture",
-    }
+    PROFILE_STORE[profile.email.casefold()] = _model_dump(profile)
+    state = _run_api_workflow(
+        f"Validate profile submitted by {profile.email}.",
+        intent="profile",
+        request_data={"submittedProfile": PROFILE_STORE[profile.email.casefold()]},
+    )
+    _raise_for_failed_workflow(state)
+    return _with_request_id(state.output, state)
+
+
+@app.get("/api/profile")
+def api_profile(
+    email: str = Query(default="", max_length=254),
+) -> dict[str, Any]:
+    state = _run_api_workflow(
+        f"Load profile analysis for {email or DEFAULT_REQUESTER_ID}.",
+        intent="profile",
+        request_data={"email": email},
+    )
+    _raise_for_failed_workflow(state)
+    return _with_request_id(state.output, state)
 
 
 @app.get("/api/matches")
 def api_matches(
     email: str = Query(default="", max_length=254),
 ) -> list[dict[str, Any]]:
-    del email  # The lab maps signed-in frontend users to the consented demo fixture.
-    search = _tool_data(
-        "search_candidates",
-        {"user_id": DEFAULT_REQUESTER_ID, "max_results": 10},
+    state = _run_api_workflow(
+        f"Find consented matches for {email or DEFAULT_REQUESTER_ID}.",
+        intent="matching",
+        request_data={"email": email},
     )
-    candidates: list[dict[str, Any]] = []
-    for row in search.get("candidates", []):
-        candidate = _candidate_api_model(row["candidate_id"])
-        if candidate is not None:
-            candidates.append(candidate)
-    return sorted(candidates, key=lambda item: item["compatibility"], reverse=True)
+    _raise_for_failed_workflow(state)
+    return state.output.get("candidates", [])
 
 
 def _date_plan_indoor_preference(custom_prompt: str | None) -> bool | None:
@@ -521,6 +670,25 @@ def _date_plan_indoor_preference(custom_prompt: str | None) -> bool | None:
 @app.post("/api/date-plan")
 def api_date_plan(request: DatePlanRequest) -> dict[str, Any]:
     candidate_id = _normalize_user_id(request.candidateId)
+    state = _run_api_workflow(
+        f"Create a date plan with {candidate_id}.",
+        intent="date_planning",
+        candidate_id=candidate_id,
+        max_budget=_extract_budget_vnd(request.customPrompt or ""),
+        request_data={"customPrompt": request.customPrompt},
+    )
+    _raise_for_failed_workflow(state)
+    if not state.output.get("items"):
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "code": "NO_DATE_PLAN",
+                "message": "No suitable date activities were found.",
+                "requestId": state.request_id,
+            },
+        )
+    return _with_request_id(state.output, state)
+
     profile_data = _tool_data(
         "get_match_profile",
         {"user_id": candidate_id, "requester_id": DEFAULT_REQUESTER_ID},
@@ -592,6 +760,31 @@ def api_date_plan(request: DatePlanRequest) -> dict[str, Any]:
 
 @app.post("/api/chat")
 def api_chat(request: ChatRequest) -> dict[str, Any]:
+    candidate_id = _normalize_user_id(request.candidateId)
+    intent = "date_planning" if _looks_like_date_planning(request.message) else "chat"
+    state = _run_api_workflow(
+        request.message,
+        intent=intent,
+        candidate_id=candidate_id,
+        max_budget=_extract_budget_vnd(request.message),
+        request_data={"customPrompt": request.message},
+    )
+    _raise_for_failed_workflow(state)
+    if intent == "date_planning" and state.safety_verdict != "BLOCK":
+        return _with_request_id(
+            {
+                "reply": _date_plan_chat_reply(state.output),
+                "suggestedTopics": [
+                    "Shared interests",
+                    "Personal boundaries",
+                    "Weekend availability",
+                ],
+                "safetyApproved": True,
+            },
+            state,
+        )
+    return _with_request_id(state.output, state)
+
     if is_safety_blocked(request.message):
         return {
             "reply": SAFE_FALLBACK_MESSAGE,
@@ -610,6 +803,12 @@ def api_chat(request: ChatRequest) -> dict[str, Any]:
         "suggestedTopics": ["Sở thích chung", "Ranh giới cá nhân", "Kế hoạch cuối tuần"],
         "safetyApproved": True,
     }
+
+
+@app.get("/api/agent/traces")
+def api_agent_traces(limit: int = Query(default=10, ge=1, le=AGENT_TRACE_LIMIT)) -> dict[str, Any]:
+    runs = list(AGENT_RUNS)[-limit:]
+    return {"runs": runs, "count": len(runs)}
 
 
 def run_cli_demo() -> None:
