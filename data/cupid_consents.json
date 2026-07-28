@@ -1,0 +1,107 @@
+[
+  {
+    "owner_id": "USR002",
+    "viewer_id": "USR001",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR001",
+    "viewer_id": "USR002",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR003",
+    "viewer_id": "USR001",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR001",
+    "viewer_id": "USR003",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR004",
+    "viewer_id": "USR001",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR001",
+    "viewer_id": "USR004",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR005",
+    "viewer_id": "USR001",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "lifestyle"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences", "values", "future_plans", "availability"]
+  },
+  {
+    "owner_id": "USR001",
+    "viewer_id": "USR005",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR006",
+    "viewer_id": "USR001",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR007",
+    "viewer_id": "USR001",
+    "consent_active": false,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR008",
+    "viewer_id": "USR001",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR009",
+    "viewer_id": "USR001",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR001",
+    "viewer_id": "USR009",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR010",
+    "viewer_id": "USR001",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  },
+  {
+    "owner_id": "USR001",
+    "viewer_id": "USR010",
+    "consent_active": true,
+    "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
+    "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
+  }
+]
