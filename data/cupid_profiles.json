@@ -4,23 +4,17 @@
     "display_name": "Minh",
     "age": 26,
     "city": "Ha Noi",
+    "active": true,
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "serious",
-    "interests": ["reading", "coffee", "travel", "cooking"],
+    "interests": ["coffee", "reading", "art", "cooking"],
     "values": ["family", "personal_growth", "kindness"],
-    "lifestyle": {
-      "smoking": false,
-      "drinking": "occasionally",
-      "exercise": "regularly"
-    },
+    "lifestyle": {"smoking": false, "drinking": "occasionally", "exercise": "regularly"},
     "communication_style": "direct",
-    "future_plans": {
-      "preferred_city": "Ha Noi",
-      "wants_children": "unsure"
-    },
+    "future_plans": {"preferred_city": "Ha Noi", "wants_children": "unsure", "relocation": "possible"},
     "availability": ["saturday_evening", "sunday_afternoon"],
-    "verified_fields": ["age", "city", "relationship_goal", "interests", "values"],
+    "date_preferences": {"max_budget": 500000, "indoor_preference": "either"},
     "blocked_user_ids": []
   },
   {
@@ -28,23 +22,17 @@
     "display_name": "Lan",
     "age": 25,
     "city": "Ha Noi",
+    "active": true,
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "serious",
-    "interests": ["reading", "coffee", "travel", "music"],
+    "interests": ["coffee", "reading", "art", "music"],
     "values": ["family", "personal_growth", "kindness"],
-    "lifestyle": {
-      "smoking": false,
-      "drinking": "occasionally",
-      "exercise": "regularly"
-    },
+    "lifestyle": {"smoking": false, "drinking": "occasionally", "exercise": "regularly"},
     "communication_style": "direct",
-    "future_plans": {
-      "preferred_city": "Ha Noi",
-      "wants_children": "unsure"
-    },
+    "future_plans": {"preferred_city": "Ha Noi", "wants_children": "unsure", "relocation": "possible"},
     "availability": ["saturday_evening", "sunday_afternoon"],
-    "verified_fields": ["age", "city", "relationship_goal", "interests", "values"],
+    "date_preferences": {"max_budget": 500000, "indoor_preference": "indoor"},
     "blocked_user_ids": []
   },
   {
@@ -52,23 +40,17 @@
     "display_name": "An",
     "age": 27,
     "city": "Ha Noi",
+    "active": true,
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "casual",
-    "interests": ["reading", "coffee", "travel"],
-    "values": ["independence", "adventure"],
-    "lifestyle": {
-      "smoking": false,
-      "drinking": "occasionally",
-      "exercise": "sometimes"
-    },
+    "interests": ["coffee", "travel", "music"],
+    "values": ["adventure", "independence"],
+    "lifestyle": {"smoking": false, "drinking": "occasionally", "exercise": "sometimes"},
     "communication_style": "direct",
-    "future_plans": {
-      "preferred_city": "Ha Noi",
-      "wants_children": "no"
-    },
+    "future_plans": {"preferred_city": "Ha Noi", "wants_children": "no", "relocation": "no"},
     "availability": ["friday_evening"],
-    "verified_fields": ["age", "city", "relationship_goal", "interests"],
+    "date_preferences": {"max_budget": 400000, "indoor_preference": "either"},
     "blocked_user_ids": []
   },
   {
@@ -76,23 +58,17 @@
     "display_name": "Hoa",
     "age": 24,
     "city": "Ha Noi",
+    "active": true,
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "serious",
-    "interests": ["cooking", "coffee", "cinema"],
+    "interests": ["art", "cooking", "cinema"],
     "values": ["family", "stability"],
-    "lifestyle": {
-      "smoking": true,
-      "drinking": "occasionally",
-      "exercise": "regularly"
-    },
+    "lifestyle": {"smoking": true, "drinking": "occasionally", "exercise": "regularly"},
     "communication_style": "gentle",
-    "future_plans": {
-      "preferred_city": "Ha Noi",
-      "wants_children": "unsure"
-    },
+    "future_plans": {"preferred_city": "Ha Noi", "wants_children": "unsure", "relocation": "possible"},
     "availability": ["sunday_afternoon"],
-    "verified_fields": ["age", "city", "relationship_goal", "lifestyle"],
+    "date_preferences": {"max_budget": 500000, "indoor_preference": "indoor"},
     "blocked_user_ids": []
   },
   {
@@ -100,20 +76,17 @@
     "display_name": "Khanh",
     "age": 28,
     "city": "Ha Noi",
+    "active": true,
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "serious",
     "interests": [],
     "values": [],
-    "lifestyle": {
-      "smoking": false,
-      "drinking": "unknown",
-      "exercise": "unknown"
-    },
+    "lifestyle": {"smoking": false},
     "communication_style": "",
     "future_plans": {},
     "availability": [],
-    "verified_fields": ["age", "city", "relationship_goal"],
+    "date_preferences": {"indoor_preference": "either"},
     "blocked_user_ids": []
   },
   {
@@ -121,23 +94,17 @@
     "display_name": "Vy",
     "age": 29,
     "city": "Ha Noi",
+    "active": true,
     "matching_enabled": false,
     "consent_to_matching": true,
     "relationship_goal": "serious",
-    "interests": ["reading", "coffee"],
+    "interests": ["coffee", "reading"],
     "values": ["family", "kindness"],
-    "lifestyle": {
-      "smoking": false,
-      "drinking": "rarely",
-      "exercise": "regularly"
-    },
+    "lifestyle": {"smoking": false, "drinking": "rarely", "exercise": "regularly"},
     "communication_style": "direct",
-    "future_plans": {
-      "preferred_city": "Ha Noi",
-      "wants_children": "unsure"
-    },
+    "future_plans": {"preferred_city": "Ha Noi", "wants_children": "unsure", "relocation": "possible"},
     "availability": ["saturday_evening"],
-    "verified_fields": ["age", "city", "relationship_goal"],
+    "date_preferences": {"max_budget": 300000, "indoor_preference": "either"},
     "blocked_user_ids": []
   },
   {
@@ -145,23 +112,17 @@
     "display_name": "Nam",
     "age": 30,
     "city": "Ha Noi",
+    "active": true,
     "matching_enabled": true,
-    "consent_to_matching": false,
+    "consent_to_matching": true,
     "relationship_goal": "serious",
-    "interests": ["travel", "music"],
+    "interests": ["music", "travel"],
     "values": ["family", "personal_growth"],
-    "lifestyle": {
-      "smoking": false,
-      "drinking": "occasionally",
-      "exercise": "regularly"
-    },
+    "lifestyle": {"smoking": false, "drinking": "occasionally", "exercise": "regularly"},
     "communication_style": "direct",
-    "future_plans": {
-      "preferred_city": "Ha Noi",
-      "wants_children": "yes"
-    },
+    "future_plans": {"preferred_city": "Ha Noi", "wants_children": "yes", "relocation": "possible"},
     "availability": ["sunday_afternoon"],
-    "verified_fields": ["age", "city", "relationship_goal"],
+    "date_preferences": {"max_budget": 450000, "indoor_preference": "either"},
     "blocked_user_ids": []
   },
   {
@@ -169,23 +130,17 @@
     "display_name": "Mai",
     "age": 23,
     "city": "Ha Noi",
+    "active": true,
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "serious",
     "interests": ["reading", "cooking"],
     "values": ["family", "kindness"],
-    "lifestyle": {
-      "smoking": false,
-      "drinking": "rarely",
-      "exercise": "regularly"
-    },
+    "lifestyle": {"smoking": false, "drinking": "rarely", "exercise": "regularly"},
     "communication_style": "direct",
-    "future_plans": {
-      "preferred_city": "Ha Noi",
-      "wants_children": "unsure"
-    },
+    "future_plans": {"preferred_city": "Ha Noi", "wants_children": "unsure", "relocation": "possible"},
     "availability": ["saturday_evening"],
-    "verified_fields": ["age", "city", "relationship_goal"],
+    "date_preferences": {"max_budget": 350000, "indoor_preference": "either"},
     "blocked_user_ids": ["USR001"]
   },
   {
@@ -193,23 +148,35 @@
     "display_name": "Quang",
     "age": 31,
     "city": "Ho Chi Minh City",
+    "active": true,
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "serious",
     "interests": ["hiking", "photography", "music"],
     "values": ["personal_growth", "independence"],
-    "lifestyle": {
-      "smoking": false,
-      "drinking": "rarely",
-      "exercise": "regularly"
-    },
+    "lifestyle": {"smoking": false, "drinking": "rarely", "exercise": "regularly"},
     "communication_style": "reflective",
-    "future_plans": {
-      "preferred_city": "Ho Chi Minh City",
-      "wants_children": "yes"
-    },
+    "future_plans": {"preferred_city": "Ho Chi Minh City", "wants_children": "yes", "relocation": "possible"},
     "availability": ["weekday_evening"],
-    "verified_fields": ["age", "city", "relationship_goal", "values"],
+    "date_preferences": {"max_budget": 700000, "indoor_preference": "outdoor"},
+    "blocked_user_ids": []
+  },
+  {
+    "user_id": "USR010",
+    "display_name": "Linh",
+    "age": 27,
+    "city": "Ha Noi",
+    "active": true,
+    "matching_enabled": true,
+    "consent_to_matching": true,
+    "relationship_goal": "serious",
+    "interests": ["coffee", "art"],
+    "values": ["family", "kindness"],
+    "lifestyle": {"smoking": false, "drinking": "occasionally", "exercise": "regularly"},
+    "communication_style": "direct",
+    "future_plans": {"preferred_city": "Ha Noi", "wants_children": "unsure", "relocation": "possible"},
+    "availability": ["saturday_evening"],
+    "date_preferences": {"max_budget": 500000, "indoor_preference": "indoor"},
     "blocked_user_ids": []
   }
 ]
