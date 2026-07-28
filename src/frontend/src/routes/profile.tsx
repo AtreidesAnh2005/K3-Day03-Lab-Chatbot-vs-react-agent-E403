@@ -4,7 +4,6 @@ import {
   User,
   Sparkles,
   Heart,
-  Brain,
   ShieldCheck,
   ArrowRight,
   RotateCcw,
@@ -12,6 +11,9 @@ import {
   Mail,
   Calendar,
   CheckCircle2,
+  AlertCircle,
+  Database,
+  Loader2,
 } from "lucide-react";
 
 import {
@@ -23,6 +25,7 @@ import {
   DEEP_QUESTIONS,
   type UserProfile,
 } from "@/lib/cupid-store";
+import { api, type ProfileAnalysis } from "@/lib/api-client";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -30,7 +33,7 @@ export const Route = createFileRoute("/profile")({
       { title: "Hồ sơ cá nhân — Cupid Agent" },
       {
         name: "description",
-        content: "Trang thông tin hồ sơ và kết quả phân tích vector tính cách cá nhân.",
+        content: "Trang thông tin hồ sơ và trạng thái dữ liệu matching đã consent.",
       },
       { property: "og:title", content: "Hồ sơ cá nhân — Cupid Agent" },
     ],
@@ -41,6 +44,8 @@ export const Route = createFileRoute("/profile")({
 function ProfilePage() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [analysis, setAnalysis] = useState<ProfileAnalysis | null>(null);
+  const [analysisError, setAnalysisError] = useState("");
 
   useEffect(() => {
     const auth = getAuth();
@@ -54,12 +59,26 @@ function ProfilePage() {
       return;
     }
     setProfile(p);
+    let cancelled = false;
+    void api
+      .getProfileAnalysis(auth.email)
+      .then((result) => {
+        if (!cancelled) setAnalysis(result);
+      })
+      .catch((reason: Error) => {
+        if (!cancelled) setAnalysisError(reason.message);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [navigate]);
 
   if (!profile) return null;
 
   const currentYear = new Date().getFullYear();
-  const age = profile.birthYear ? currentYear - profile.birthYear : 24;
+  const age = currentYear - profile.birthYear;
+  const completeness = Math.round((analysis?.completeness.completeness_ratio ?? 0) * 100);
+  const missingOptionalFields = analysis?.completeness.missing_optional_fields ?? [];
 
   const genderLabel =
     profile.gender === "female" ? "Nữ" : profile.gender === "male" ? "Nam" : "Phi nhị nguyên";
@@ -85,7 +104,7 @@ function ProfilePage() {
             Hồ sơ cá nhân của <span className="text-gradient-romance">{profile.name}</span>
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Thông tin khảo sát tính cách và vector embedding đã sẵn sàng ghép đôi.
+            Câu trả lời của bạn và trạng thái dữ liệu matching từ Profile Tools.
           </p>
         </div>
 
@@ -123,10 +142,15 @@ function ProfilePage() {
 
               <div className="mt-6 w-full rounded-2xl border border-border/60 bg-background/60 p-4 text-left text-xs space-y-2">
                 <div className="flex items-center justify-between text-muted-foreground">
-                  <span>Trạng thái Vector:</span>
-                  <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                    <CheckCircle2 className="h-3.5 w-3.5" /> Đã Embed
-                  </span>
+                  <span>Trạng thái hồ sơ:</span>
+                  {analysis ? (
+                    <span className="font-semibold text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      {analysis.completeness.profile_complete ? "Đủ điều kiện" : "Cần bổ sung"}
+                    </span>
+                  ) : (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  )}
                 </div>
                 <div className="flex items-center justify-between text-muted-foreground">
                   <span>Ngày khởi tạo:</span>
@@ -159,24 +183,30 @@ function ProfilePage() {
 
         {/* Right Column: Detailed Personality & Answers */}
         <div className="space-y-6">
-          {/* Vector Embedding Summary Card */}
+          {/* Profile tool summary */}
           <div className="rounded-3xl border border-border/60 bg-card/80 p-6 shadow-soft backdrop-blur">
             <div className="mb-4 flex items-center gap-2 font-display text-xl">
-              <Brain className="h-5 w-5 text-primary" />
-              <span>Đặc trưng tính cách AI (Vector Profile)</span>
+              <Database className="h-5 w-5 text-primary" />
+              <span>Dữ liệu matching đã kiểm tra</span>
             </div>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Dựa trên câu trả lời của bạn, **Profile Agent** đã mã hóa hồ sơ thành vector 512 chiều để thực hiện Matching dựa trên Cosine Similarity với kho dữ liệu ứng viên.
+              Profile Agent dùng <strong>get_match_profile</strong> và{" "}
+              <strong>check_profile_completeness</strong>. Giao diện chỉ hiển thị các trường mà
+              tools cho phép, không suy diễn vector hoặc thuộc tính chưa có dữ liệu.
             </p>
 
             <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 text-center">
               <div className="rounded-2xl border border-border/50 bg-background/50 p-3">
-                <div className="text-xs text-muted-foreground">Nhóm tính cách</div>
-                <div className="mt-1 font-semibold text-primary">{personalityLabel(profile.personality)}</div>
+                <div className="text-xs text-muted-foreground">Profile ID</div>
+                <div className="mt-1 font-semibold text-primary">
+                  {analysis?.profileId ?? "Đang tải"}
+                </div>
               </div>
               <div className="rounded-2xl border border-border/50 bg-background/50 p-3">
-                <div className="text-xs text-muted-foreground">Độ mở cá nhân</div>
-                <div className="mt-1 font-semibold text-foreground">Cao (88%)</div>
+                <div className="text-xs text-muted-foreground">Độ đầy đủ</div>
+                <div className="mt-1 font-semibold text-foreground">
+                  {analysis ? `${completeness}%` : "Đang tải"}
+                </div>
               </div>
               <div className="rounded-2xl border border-border/50 bg-background/50 p-3">
                 <div className="text-xs text-muted-foreground">Mức an toàn</div>
@@ -185,6 +215,19 @@ function ProfilePage() {
                 </div>
               </div>
             </div>
+
+            {analysisError && (
+              <div className="mt-4 flex gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                {analysisError}
+              </div>
+            )}
+
+            {analysis && missingOptionalFields.length > 0 && (
+              <p className="mt-4 text-xs text-muted-foreground">
+                Trường tùy chọn còn thiếu: {missingOptionalFields.join(", ")}.
+              </p>
+            )}
           </div>
 
           {/* Answers Summary Card */}

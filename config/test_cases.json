@@ -78,8 +78,8 @@
         "order": 1,
         "tool": "calculate_compatibility",
         "arguments": {
-          "user_a_id": "U001",
-          "user_b_id": "U003"
+          "user_id": "USR001",
+          "candidate_id": "USR003"
         }
       }
     ],
@@ -88,7 +88,6 @@
         "order": 1,
         "tool": "calculate_compatibility",
         "output": {
-          "candidate_id": "U003",
           "eligible": true,
           "score": 86,
           "confidence": 92,
@@ -153,15 +152,15 @@
         "order": 1,
         "tool": "get_shared_interests",
         "arguments": {
-          "user_a_id": "U001",
-          "user_b_id": "U003"
+          "user_a_id": "USR001",
+          "user_b_id": "USR003"
         }
       },
       {
         "order": 2,
         "tool": "search_date_activities",
         "arguments": {
-          "city": "Hanoi",
+          "city": "Ha Noi",
           "interests": [
             "photography",
             "coffee",
@@ -192,24 +191,20 @@
             {
               "activity_id": "A01",
               "name": "Workshop làm gốm",
-              "city": "Hanoi",
               "interests": [
                 "art",
                 "creative"
               ],
-              "estimated_cost": 400000,
               "indoor": true
             },
             {
               "activity_id": "A02",
               "name": "Cafe triển lãm ảnh",
-              "city": "Hanoi",
               "interests": [
                 "photography",
                 "coffee",
                 "art"
               ],
-              "estimated_cost": 250000,
               "indoor": true
             }
           ]

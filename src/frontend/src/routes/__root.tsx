@@ -86,7 +86,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:title", content: "Cupid Agent — Trợ lý ghép đôi bằng AI" },
       {
         property: "og:description",
-        content: "Tìm nửa kia phù hợp qua phân tích tính cách và vector tương thích.",
+        content: "Tìm kết nối phù hợp qua tools kiểm tra consent và tính tương thích hai chiều.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

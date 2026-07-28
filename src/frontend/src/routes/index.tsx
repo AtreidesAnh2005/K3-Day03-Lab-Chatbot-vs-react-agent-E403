@@ -61,16 +61,16 @@ function Landing() {
             ảnh.
           </h1>
           <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
-            Cupid Agent hỏi bạn vài câu hỏi tinh tế, embed hồ sơ thành vector, rồi ghép bạn với
-            những người có độ tương thích cao nhất trong kho dữ liệu của chúng tôi.
+            Cupid Agent thu thập câu trả lời, kiểm tra consent và hard constraints, rồi dùng
+            Compatibility Tools để xếp hạng những kết nối đủ điều kiện.
           </p>
 
           <div className="grid gap-3 sm:grid-cols-3">
             <Feature icon={<Brain className="h-4 w-4" />} title="Hồ sơ sâu">
               Câu hỏi mở rộng theo tính cách bạn chọn.
             </Feature>
-            <Feature icon={<Sparkles className="h-4 w-4" />} title="Vector matching">
-              Embed và xếp hạng theo độ tương thích.
+            <Feature icon={<Sparkles className="h-4 w-4" />} title="Tool matching">
+              Chấm điểm hai chiều từ dữ liệu đã consent.
             </Feature>
             <Feature icon={<Shield className="h-4 w-4" />} title="Riêng tư">
               Dữ liệu được bảo vệ bởi Safety Critic Agent.
@@ -124,7 +124,7 @@ function Landing() {
                 <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
               </button>
               <p className="text-center text-xs text-muted-foreground">
-                Không cần mật khẩu — bản demo, dữ liệu lưu trên trình duyệt.
+                Bản lab không dùng mật khẩu; hồ sơ đăng nhập được lưu cục bộ trên trình duyệt.
               </p>
             </div>
           </form>

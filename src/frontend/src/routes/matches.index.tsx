@@ -1,9 +1,21 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Heart, MapPin, Sparkles, User, Briefcase, HeartHandshake, Calendar } from "lucide-react";
+import {
+  AlertCircle,
+  Briefcase,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  HeartHandshake,
+  Loader2,
+  MapPin,
+  RefreshCw,
+  Sparkles,
+  User,
+} from "lucide-react";
 
 import {
-  findMatches,
   getAuth,
   getProfile,
   personalityLabel,
@@ -30,6 +42,7 @@ export const Route = createFileRoute("/matches/")({
 function Matches() {
   const navigate = useNavigate();
   const [candidates, setCandidates] = useState<Candidate[] | null>(null);
+  const [error, setError] = useState("");
   const [idx, setIdx] = useState(0);
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
 
@@ -39,21 +52,27 @@ function Matches() {
       navigate({ to: "/" });
       return;
     }
-    const p = getProfile();
-    if (!p) {
+    if (!getProfile()) {
       navigate({ to: "/onboarding" });
       return;
     }
-    const localCandidates = findMatches(p);
-    setCandidates(localCandidates);
-
     let cancelled = false;
-    void api.getMatches(auth.email).then((remoteCandidates) => {
-      if (!cancelled && remoteCandidates.length > 0) {
-        setCandidates(remoteCandidates);
-        setIdx(0);
-      }
-    });
+    setCandidates(null);
+    setError("");
+    void api
+      .getMatches(auth.email)
+      .then((remoteCandidates) => {
+        if (!cancelled) {
+          setCandidates(remoteCandidates);
+          setIdx(0);
+        }
+      })
+      .catch((reason: Error) => {
+        if (!cancelled) {
+          setError(reason.message);
+          setCandidates([]);
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -63,7 +82,50 @@ function Matches() {
 
   const dots = useMemo(() => candidates?.map((_, i) => i) ?? [], [candidates]);
 
-  if (!candidates || !active) return null;
+  if (candidates === null) {
+    return (
+      <main className="flex min-h-[65vh] items-center justify-center px-6">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+          <p className="mt-3 text-sm text-muted-foreground">
+            Matching Agent đang gọi các tools kiểm tra consent và tính tương thích...
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex min-h-[65vh] items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <AlertCircle className="mx-auto h-9 w-9 text-destructive" />
+          <h1 className="mt-3 font-display text-2xl">Không tải được kết nối</h1>
+          <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-5 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+          >
+            <RefreshCw className="h-4 w-4" /> Thử lại
+          </button>
+        </div>
+      </main>
+    );
+  }
+
+  if (!active) {
+    return (
+      <main className="flex min-h-[65vh] items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <Heart className="mx-auto h-9 w-9 text-primary" />
+          <h1 className="mt-3 font-display text-2xl">Chưa có kết nối đủ điều kiện</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Tools không tìm thấy hồ sơ vượt qua đồng thời consent, safety và hard constraints.
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   function prev() {
     setIdx((i) => (i - 1 + candidates!.length) % candidates!.length);
@@ -77,13 +139,13 @@ function Matches() {
       <div className="mb-8 flex items-end justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-medium text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Kết quả từ Cupid Classification Algorithm
+            <Sparkles className="h-3.5 w-3.5" /> Matching Agent + Consent-aware Tools
           </span>
           <h1 className="mt-3 font-display text-4xl sm:text-5xl">
             Những người <span className="text-gradient-romance">phù hợp</span> với bạn
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {candidates.length} kết nối từ dataset giả lập (phần hình ảnh để trống).
+            {candidates.length} kết nối đã vượt qua consent, safety và hard constraints.
           </p>
         </div>
       </div>
@@ -107,7 +169,7 @@ function Matches() {
                   </div>
                   <div className="font-display text-3xl text-foreground font-semibold">{active.name}</div>
                   <span className="mt-1 text-xs font-medium text-muted-foreground">
-                    Chưa cập nhật ảnh đại diện
+                    Ảnh không nằm trong dữ liệu được đồng ý chia sẻ
                   </span>
                 </div>
               )}
@@ -156,7 +218,7 @@ function Matches() {
 
               <div className="mt-6">
                 <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Lý do khớp (Phân tích Cupid AI)
+                  Lý do từ Compatibility Tool
                 </div>
                 <ul className="mt-2 space-y-1.5">
                   {active.reasons.map((r) => (

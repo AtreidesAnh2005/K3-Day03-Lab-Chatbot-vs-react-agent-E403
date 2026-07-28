@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Sparkles } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 
 import {
   CORE_QUESTIONS,
@@ -35,6 +35,7 @@ function Onboarding() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [embedding, setEmbedding] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   useEffect(() => {
     const auth = getAuth();
@@ -61,7 +62,7 @@ function Onboarding() {
   const isLast = step === total - 1;
   const answered = current ? !!answers[current.id]?.trim() : false;
 
-  function handleNext() {
+  async function handleNext() {
     if (!answered) return;
     if (!isLast) {
       setStep((s) => s + 1);
@@ -78,13 +79,17 @@ function Onboarding() {
       createdAt: new Date().toISOString(),
     };
     setEmbedding(true);
-    saveProfile(profile);
-    void Promise.all([
-      api.submitProfile(profile),
-      new Promise((resolve) => setTimeout(resolve, 800)),
-    ]).finally(() => {
+    setSubmitError("");
+    try {
+      await api.submitProfile(profile);
+      saveProfile(profile);
       navigate({ to: "/profile" });
-    });
+    } catch (reason) {
+      setSubmitError(
+        reason instanceof Error ? reason.message : "Không gửi được hồ sơ tới Profile Agent.",
+      );
+      setEmbedding(false);
+    }
   }
 
   function setAnswer(value: string) {
@@ -172,33 +177,31 @@ function Onboarding() {
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
+        {submitError && (
+          <div className="mt-4 flex gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            {submitError}
+          </div>
+        )}
       </div>
     </main>
   );
 }
 
 function EmbeddingScreen() {
-  const steps = [
-    "Profile Agent đang xây dựng hồ sơ...",
-    "Đang embed thành vector 1536 chiều...",
-    "Matching Agent đang tìm kết nối phù hợp...",
-  ];
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setI((v) => (v + 1) % steps.length), 500);
-    return () => clearInterval(t);
-  }, []);
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-6">
       <div className="text-center">
         <div className="relative mx-auto mb-6 h-20 w-20">
           <div className="absolute inset-0 rounded-full bg-gradient-romance opacity-40 blur-2xl" />
           <div className="relative flex h-full w-full items-center justify-center rounded-full bg-primary/10">
-            <Sparkles className="h-8 w-8 animate-pulse text-primary" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         </div>
-        <h2 className="font-display text-3xl">Đang phân tích bạn...</h2>
-        <p className="mt-2 text-sm text-muted-foreground">{steps[i]}</p>
+        <h2 className="font-display text-3xl">Profile Agent đang kiểm tra hồ sơ</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Đang chạy guardrail và profile completeness tools...
+        </p>
       </div>
     </main>
   );

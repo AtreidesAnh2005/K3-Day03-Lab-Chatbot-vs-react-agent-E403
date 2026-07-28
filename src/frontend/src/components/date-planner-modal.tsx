@@ -10,8 +10,9 @@ import {
   Send,
   Check,
   Copy,
-  Brain,
   Loader2,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 
 import type { Candidate } from "@/lib/cupid-store";
@@ -28,6 +29,7 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
   const [datePlan, setDatePlan] = useState<DatePlanResponse | null>(null);
   const [customPrompt, setCustomPrompt] = useState("");
   const [copied, setCopied] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -37,11 +39,13 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
 
   async function fetchPlan(prompt?: string) {
     setLoading(true);
+    setError("");
     try {
       const plan = await api.generateDatePlan(candidate.id, prompt);
       setDatePlan(plan);
     } catch (err) {
-      console.error(err);
+      setDatePlan(null);
+      setError(err instanceof Error ? err.message : "Không tạo được kế hoạch.");
     } finally {
       setLoading(false);
     }
@@ -73,6 +77,7 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
         {/* Close Button */}
         <button
           onClick={onClose}
+          aria-label="Đóng"
           className="absolute right-5 top-5 rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground"
         >
           <X className="h-5 w-5" />
@@ -87,7 +92,7 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
             Kế hoạch hẹn hò cùng <span className="text-gradient-romance">{candidate.name}</span>
           </h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Lịch trình được tự động đề xuất dựa trên sở thích, ngôn ngữ tình yêu ({candidate.loveLanguage}) và nhóm tính cách của cả hai.
+            Lịch trình dùng sở thích chung đã consent, thành phố và ngân sách từ Profile Tools.
           </p>
         </div>
 
@@ -104,6 +109,18 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
                 Phân tích điểm tương đồng về địa điểm tại {candidate.city} & chủ đề trò chuyện
               </p>
             </div>
+          </div>
+        ) : error ? (
+          <div className="my-10 text-center">
+            <AlertCircle className="mx-auto h-9 w-9 text-destructive" />
+            <h3 className="mt-3 font-semibold">Không tạo được kế hoạch</h3>
+            <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">{error}</p>
+            <button
+              onClick={() => fetchPlan()}
+              className="mt-5 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              <RefreshCw className="h-4 w-4" /> Thử lại
+            </button>
           </div>
         ) : datePlan ? (
           <div className="space-y-6">
@@ -188,7 +205,7 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
                 onClick={onClose}
                 className="rounded-full bg-primary px-6 py-2 text-xs font-semibold text-primary-foreground shadow-glow transition hover:opacity-95"
               >
-                Hoàn tất & Lưu kế hoạch
+                Đóng
               </button>
             </div>
           </div>
