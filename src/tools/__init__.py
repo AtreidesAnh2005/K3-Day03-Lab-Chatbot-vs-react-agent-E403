@@ -13,7 +13,7 @@ from typing import Any
 
 ToolResult = dict[str, Any]
 
-DATA_DIR = Path(__file__).resolve().parents[1] / "data"
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
 VALID_STATUSES = {"success", "warning", "insufficient_data", "denied", "error"}
 VALID_PURPOSES = {"matching", "date_planning"}
@@ -1518,3 +1518,23 @@ AVAILABLE_TOOLS = {
     **MATCHING_TOOLS,
     **DATE_TOOLS,
 }
+
+# Compatibility exports for Role 4 sample code in main. They are intentionally
+# not registered in AVAILABLE_TOOLS.
+from .date_tools import get_weather, search_flights  # noqa: E402
+
+
+def extract_profile(user_query: str) -> dict[str, Any]:
+    return {"raw_query": user_query, "interests": [], "preferences": []}
+
+
+def find_candidate_matches(profile: dict[str, Any]) -> list[dict[str, Any]]:
+    return []
+
+
+def suggest_date_plan(profile: dict[str, Any], candidate: dict[str, Any]) -> dict[str, str]:
+    return {
+        "idea": "Cafe yen tinh de tro chuyen va tim hieu nhau",
+        "location": "Quan cafe trung tam",
+        "safety_note": "Gap o noi cong cong va tu bao quan thong tin ca nhan.",
+    }
