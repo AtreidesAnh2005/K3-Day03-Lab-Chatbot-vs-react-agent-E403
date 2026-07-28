@@ -1,0 +1,21 @@
+[
+  {
+    "participant_ids": ["USR001", "USR003"],
+    "confidence": 92,
+    "breakdown": {
+      "relationship_goal": 100,
+      "values": 90,
+      "lifestyle": 75,
+      "communication_style": 80,
+      "interests": 70,
+      "logistics": 100
+    },
+    "strengths": [
+      "Cùng định hướng mối quan hệ lâu dài",
+      "Tương đồng về giá trị sống"
+    ],
+    "potential_conflicts": [
+      "Khác biệt về mức độ giao tiếp xã hội"
+    ]
+  }
+]

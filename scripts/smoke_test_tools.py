@@ -161,10 +161,28 @@ def test_compatibility() -> None:
     assert 0 <= high["data"]["score"] <= 100
     assert high == calculate_compatibility("USR001", "USR002")
 
-    conflict = calculate_compatibility("USR001", "USR003")
-    assert_envelope(conflict)
-    assert conflict["data"]["eligible"] is False
-    assert "USER_TO_CANDIDATE_HARD_CONFLICT" in conflict["data"]["hard_conflicts"]
+    acceptance_pair = calculate_compatibility("U001", "U003")
+    assert_envelope(acceptance_pair)
+    assert acceptance_pair["data"]["candidate_id"] == "U003"
+    assert acceptance_pair["data"]["eligible"] is True
+    assert acceptance_pair["data"]["hard_conflicts"] == []
+    assert acceptance_pair["data"]["score"] == 86
+    assert acceptance_pair["data"]["confidence"] == 92
+    assert acceptance_pair["data"]["breakdown"] == {
+        "relationship_goal": 100,
+        "values": 90,
+        "lifestyle": 75,
+        "communication_style": 80,
+        "interests": 70,
+        "logistics": 100,
+    }
+    assert acceptance_pair["data"]["strengths"] == [
+        "Cùng định hướng mối quan hệ lâu dài",
+        "Tương đồng về giá trị sống",
+    ]
+    assert acceptance_pair["data"]["potential_conflicts"] == [
+        "Khác biệt về mức độ giao tiếp xã hội",
+    ]
 
     smoking = calculate_compatibility("USR001", "USR004")
     assert_envelope(smoking)
@@ -187,7 +205,9 @@ def test_compatibility() -> None:
     assert "aligned" in serialized
     assert "trade_off" in serialized
     assert "unknown" in json.dumps(get_compatibility_breakdown("USR001", "USR005"), ensure_ascii=False)
-    assert "hard_conflict" in json.dumps(get_compatibility_breakdown("USR001", "USR003"), ensure_ascii=False)
+    acceptance_breakdown = get_compatibility_breakdown("U001", "U003")
+    assert acceptance_breakdown["data"]["score"] == 86
+    assert acceptance_breakdown["data"]["potential_conflicts"]
     assert breakdown["data"]["limitations"]
     assert_no_private_payload(breakdown)
 
@@ -198,23 +218,50 @@ def test_date_tools() -> None:
     assert shared["status"] == "success"
     assert set(shared["data"]["shared_interests"]) >= {"coffee", "reading", "art"}
 
+    acceptance_shared = get_shared_interests("U001", "U003")
+    assert acceptance_shared["data"]["shared_interests"] == [
+        "photography",
+        "coffee",
+        "art",
+    ]
+
     no_shared = get_shared_interests("USR001", "USR009")
     assert_envelope(no_shared)
     assert no_shared["status"] == "warning"
     assert no_shared["data"]["recommended_action"] == "use_neutral_activity"
 
-    activities = search_date_activities("Ha Noi", ["coffee", "art"], 500000)
+    activities = search_date_activities(
+        "Hanoi",
+        ["photography", "coffee", "art"],
+        500000,
+    )
     assert_envelope(activities)
     assert activities["status"] == "success"
     ids = [item["activity_id"] for item in activities["data"]["activities"]]
     assert "A10" not in ids
-    assert ids[0] == "A09"
+    assert ids == ["A01", "A02"]
+    assert activities["data"]["activities"][0] == {
+        "activity_id": "A01",
+        "name": "Workshop làm gốm",
+        "city": "Hanoi",
+        "interests": ["art", "creative"],
+        "estimated_cost": 400000,
+        "indoor": True,
+    }
+    assert activities["data"]["activities"][1] == {
+        "activity_id": "A02",
+        "name": "Cafe triển lãm ảnh",
+        "city": "Hanoi",
+        "interests": ["photography", "coffee", "art"],
+        "estimated_cost": 250000,
+        "indoor": True,
+    }
 
     indoor = search_date_activities("Ha Noi", indoor=True)
     assert all(item["indoor"] is True for item in indoor["data"]["activities"])
 
     budget = search_date_activities("Ha Noi", max_budget=100000)
-    assert all(item["estimated_pair_cost"] <= 100000 for item in budget["data"]["activities"])
+    assert all(item["estimated_cost"] <= 100000 for item in budget["data"]["activities"])
 
     empty = search_date_activities("Da Nang")
     assert_envelope(empty)
