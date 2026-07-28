@@ -57,6 +57,23 @@ def main() -> None:
     assert date_plan.json()["items"]
     assert "hệ thống chưa đặt chỗ" in date_plan.json()["items"][0]["description"]
 
+    date_chat = client.post(
+        "/api/chat",
+        json={
+            "candidateId": candidates[0]["id"],
+            "message": "Lap ke hoach hen ngoai troi cuoi tuan voi ngan sach 500k.",
+        },
+    )
+    assert date_chat.status_code == 200
+    assert date_chat.json()["safetyApproved"] is True
+    assert "Date Planning Agent" in date_chat.json()["reply"]
+    date_chat_trace = client.get("/api/agent/traces").json()["runs"][-1]
+    assert "date_planning" in date_chat_trace["completed_agents"]
+    assert any(
+        observation["tool"] == "get_shared_interests"
+        for observation in date_chat_trace["observations"]
+    )
+
     blocked_chat = client.post(
         "/api/chat",
         json={
@@ -86,6 +103,7 @@ def main() -> None:
     print("PASS profile")
     print(f"PASS matches ({len(candidates)} candidates)")
     print("PASS date plan")
+    print("PASS date planning chat")
     print("PASS chat guardrail")
     print("PASS multi-agent traces")
     print("All Cupid Agent API smoke tests passed.")

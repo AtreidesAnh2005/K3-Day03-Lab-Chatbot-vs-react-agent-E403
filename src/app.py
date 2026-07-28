@@ -14,6 +14,7 @@ import json
 import os
 import re
 import sys
+import unicodedata
 from dataclasses import dataclass
 from typing import Any
 
@@ -223,6 +224,101 @@ def _normalize_city(value: Any) -> Any:
         "hồ chí minh": "Ho Chi Minh City",
     }
     return aliases.get(value.strip().casefold(), value.strip())
+
+
+def _fold_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFD", value.casefold())
+    return "".join(
+        character
+        for character in normalized
+        if unicodedata.category(character) != "Mn"
+    )
+
+
+def _is_date_planning_chat(message: str) -> bool:
+    text = _fold_text(message)
+    direct_markers = {
+        "date plan",
+        "date planning",
+        "lap ke hoach hen",
+        "ke hoach hen",
+        "lich trinh hen",
+        "goi y buoi hen",
+        "buoi hen",
+        "hen ho",
+        "itinerary",
+    }
+    context_markers = {
+        "ngoai troi",
+        "trong nha",
+        "cuoi tuan",
+        "toi nay",
+        "ngan sach",
+        "budget",
+        "dia diem",
+        "cafe",
+        "ca phe",
+        "an toi",
+        "workshop",
+        "trien lam",
+        "bao tang",
+    }
+    return any(marker in text for marker in direct_markers) or (
+        "hen" in text and any(marker in text for marker in context_markers)
+    )
+
+
+def _extract_chat_city(message: str) -> str | None:
+    text = _fold_text(message)
+    if "ha noi" in text or "hanoi" in text:
+        return "Hanoi"
+    if any(marker in text for marker in {"ho chi minh", "tp hcm", "tphcm", "sai gon", "saigon"}):
+        return "Ho Chi Minh City"
+    if "da nang" in text:
+        return "Da Nang"
+    return None
+
+
+def _extract_chat_budget(message: str) -> int | None:
+    text = _fold_text(message).replace("đ", "d")
+    million_match = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:trieu|tr|m)\b", text)
+    if million_match:
+        return int(float(million_match.group(1).replace(",", ".")) * 1_000_000)
+
+    thousand_match = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:k|nghin|ngan)\b", text)
+    if thousand_match:
+        return int(float(thousand_match.group(1).replace(",", ".")) * 1_000)
+
+    amount_match = re.search(r"\b(\d{1,3}(?:[.,]\d{3})+|\d{5,})\s*(?:vnd|dong|d)?\b", text)
+    if amount_match:
+        return int(re.sub(r"[.,]", "", amount_match.group(1)))
+    return None
+
+
+def _format_date_plan_chat_reply(output: dict[str, Any]) -> str:
+    items = output.get("items") or []
+    questions = output.get("icebreakerQuestions") or []
+    if not items:
+        return (
+            "Date Planning Agent chưa tìm được lịch trình đủ dữ liệu đã consent. "
+            "Bạn có thể thử lại với ngân sách, thành phố hoặc kiểu không gian cụ thể hơn."
+        )
+
+    lines = [
+        f"Date Planning Agent đề xuất: {output.get('theme') or 'kế hoạch hẹn hò an toàn'}",
+        "",
+    ]
+    for item in items:
+        lines.append(
+            (
+                f"{item.get('step')}. {item.get('time')} - {item.get('title')} "
+                f"({item.get('location')}): {item.get('description')}"
+            )
+        )
+    if questions:
+        lines.extend(["", "Câu hỏi phá băng:"])
+        lines.extend(f"- {question}" for question in questions)
+    return "\n".join(lines)
 
 
 def _normalize_tool_arguments(
@@ -494,6 +590,37 @@ def api_date_plan(request: DatePlanRequest) -> dict[str, Any]:
 @app.post("/api/chat")
 def api_chat(request: ChatRequest) -> dict[str, Any]:
     candidate_id = _normalize_user_id(request.candidateId)
+    if _is_date_planning_chat(request.message):
+        state = _run_api_workflow(
+            user_query=request.message,
+            intent="date_planning",
+            candidate_id=candidate_id,
+            city=_extract_chat_city(request.message),
+            max_budget=_extract_chat_budget(request.message),
+            request_data={
+                "candidateId": candidate_id,
+                "customPrompt": request.message,
+                "source": "chat",
+            },
+        )
+        if state.safety_verdict != "BLOCK":
+            _raise_workflow_error(state)
+        return {
+            "reply": (
+                state.output.get("message", SAFE_FALLBACK_MESSAGE)
+                if state.safety_verdict == "BLOCK"
+                else _format_date_plan_chat_reply(state.output)
+            ),
+            "suggestedTopics": [
+                "Đổi ngân sách",
+                "Không gian ngoài trời",
+                "Câu hỏi phá băng",
+            ],
+            "safetyApproved": state.safety_verdict != "BLOCK",
+            "requestId": state.request_id,
+            "datePlan": state.output if state.safety_verdict != "BLOCK" else None,
+        }
+
     state = _run_api_workflow(
         user_query=request.message,
         intent="chat",
