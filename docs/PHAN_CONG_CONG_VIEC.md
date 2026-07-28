@@ -2,19 +2,28 @@
 
 > 💡 **Hướng dẫn**: Mỗi thành viên mở đúng file được phân công trong thư mục dự án và thực hiện checklist theo từng Mốc.
 
+> 👥 **Thành viên tham gia:**  
+> 1. Lương Quốc Khánh (MSSV: 2A202601713 - Group Lead)  
+> 2. Nguyễn Hoàng Khôi (MSSV: 2A202601383)  
+> 3. Nguyễn Công Hùng (MSSV: 2A202601071)  
+> 4. Trần Nguyễn Mỹ Anh (MSSV: 2A202601019)  
+> 5. Nguyễn Thu Huyền (MSSV: 2A202601027)  
+> 6. Hoàng Đức Anh (MSSV: 2A202601223)  
+
 ---
 
 ## 👥 1. BẢNG PHÂN VAI & FILE ĐẢM NHẬN
 
 | Vai trò (Role)                               | File đảm nhận           | Nhiệm vụ chính                                                                                          | Người đảm nhận  |
 | :-------------------------------------------- | :------------------------- | :--------------------------------------------------------------------------------------------------------- | :------------------- |
-| **Role 1: Product Architect**           | `config/test_cases.json` | Định hướng bài toán & soạn bộ câu test case                                                       | `________________` |
-| **Role 2: Tool Engineer**               | `src/tools.py`           | Định nghĩa các công cụ (Tools) cho Agent                                                             | `________________` |
-| **Role 3: Prompt Engineer**             | `src/prompts.py`         | Viết ReAct System Prompt & phanh Guardrails                                                               | `________________` |
-| **Role 4: Core Developer / Integrator** | `src/app.py`             | **Đầu mối kéo code/file của nhóm (`git pull`), Vibe Code lắp ráp thành App hoàn chỉnh** | `________________` |
-| **Role 5: Observability**               | `docs/trace_eval.md`     | Lập bảng Scoring Matrix & Soi nhật ký Trace Log                                                        | `________________` |
+| **Role 1: Product Architect**           | `config/test_cases.json` | Định hướng bài toán & soạn bộ câu test case                                                       | `Nguyễn Hoàng Khôi (2A202601383)` |
+| **Role 2: Tool Engineer**               | `src/tools.py`           | Định nghĩa các công cụ (Tools) cho Agent                                                             | `Nguyễn Công Hùng (2A202601071)` |
+| **Role 3: Prompt Engineer**             | `src/prompts.py`         | Viết ReAct System Prompt & phanh Guardrails                                                               | `Trần Nguyễn Mỹ Anh (2A202601019)` |
+| **Role 4: Core Developer / Integrator** | `src/app.py`             | **Đầu mối kéo code/file của nhóm (`git pull`), Vibe Code lắp ráp thành App hoàn chỉnh** | `Lương Quốc Khánh (2A202601713 - Lead)` |
+| **Role 5: Observability**               | `docs/trace_eval.md`     | Lập bảng Scoring Matrix & Soi nhật ký Trace Log                                                        | `Nguyễn Thu Huyền (2A202601027)` |
+| **Role 6: QA & Flowchart Coordinator**  | `docs/hybrid_flowchart.mermaid` | Kiểm thử độc lập, Cross-Audit, Flowchart và Demo                                                  | `Hoàng Đức Anh (2A202601223)` |
 
-*Note: Nếu nhóm 6 người, Role 5 tách thành 5A (Trace Analyst) và 5B (Flowchart Architect).*
+*Note: Nhóm 6 người - Role 6 đảm nhận QA & Flowchart.*
 
 > 🌟 **VAI TRÒ NÒNG NỐT CỦA ROLE 4 (ĐẦU MỐI LẮP RÁP APP HOÀN CHỈNH)**:
 >
