@@ -1,55 +1,50 @@
 """Matching tools for filtering and ranking candidates."""
 
-from services.candidate_filtering import filter_candidates
-from services.compatibility_scoring import score_compatibility
+try:
+    from ..services.candidate_filtering import filter_candidates
+    from ..services.compatibility_scoring import score_compatibility
+except ImportError:
+    from services.candidate_filtering import filter_candidates
+    from services.compatibility_scoring import score_compatibility
 
 
 def calculate_compatibility(user_a_id: str, user_b_id: str) -> dict:
-    """Calculate compatibility for two synthetic Cupid user IDs."""
-    if {user_a_id, user_b_id} != {"U001", "U003"}:
+    """Calculate compatibility through the fixture-backed registry."""
+    from . import calculate_compatibility as registry_calculate_compatibility
+
+    result = registry_calculate_compatibility(user_a_id, user_b_id)
+    if result.get("status") not in {"success", "insufficient_data"}:
+        error = result.get("error") or {}
         return {
             "eligible": False,
-            "error": f"No synthetic compatibility fixture for {user_a_id} and {user_b_id}.",
+            "error": error.get("message", "Compatibility calculation failed."),
         }
 
-    return {
-        "candidate_id": "U003" if user_a_id == "U001" else "U001",
-        "eligible": True,
-        "score": 86,
-        "confidence": 92,
-        "breakdown": {
-            "relationship_goal": 100,
-            "values": 90,
-            "lifestyle": 75,
-            "communication_style": 80,
-            "interests": 70,
-            "logistics": 100,
-        },
-        "strengths": [
-            "Cùng định hướng mối quan hệ lâu dài",
-            "Tương đồng về giá trị sống",
-        ],
-        "potential_conflicts": [
-            "Khác biệt về mức độ giao tiếp xã hội",
-        ],
-    }
+    data = result.get("data") or {}
+    contract_fields = (
+        "candidate_id",
+        "eligible",
+        "score",
+        "confidence",
+        "breakdown",
+        "strengths",
+        "potential_conflicts",
+    )
+    return {field: data.get(field) for field in contract_fields}
 
 
 def get_shared_interests(user_a_id: str, user_b_id: str) -> dict:
-    """Return shared interests for two synthetic Cupid user IDs."""
-    if {user_a_id, user_b_id} != {"U001", "U003"}:
+    """Return consented shared interests through the tool registry."""
+    from . import get_shared_interests as registry_get_shared_interests
+
+    result = registry_get_shared_interests(user_a_id, user_b_id)
+    if result.get("status") not in {"success", "warning"}:
+        error = result.get("error") or {}
         return {
             "shared_interests": [],
-            "error": f"No synthetic shared-interest fixture for {user_a_id} and {user_b_id}.",
+            "error": error.get("message", "Shared-interest lookup failed."),
         }
-
-    return {
-        "shared_interests": [
-            "photography",
-            "coffee",
-            "art",
-        ],
-    }
+    return {"shared_interests": (result.get("data") or {}).get("shared_interests", [])}
 
 
 def find_candidate_matches(profile: dict) -> list[dict]:

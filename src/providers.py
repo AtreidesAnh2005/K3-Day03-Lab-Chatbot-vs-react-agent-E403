@@ -38,6 +38,60 @@ def _latest_observation(prompt: str) -> dict | None:
     return observation if isinstance(observation, dict) else None
 
 
+def _all_observations(prompt: str) -> list[dict]:
+    """Extract structured Observations in the order they entered the trace."""
+    marker = "Observation:\n"
+    observations: list[dict] = []
+    cursor = 0
+    decoder = json.JSONDecoder()
+    while True:
+        marker_index = prompt.find(marker, cursor)
+        if marker_index < 0:
+            return observations
+        raw = prompt[marker_index + len(marker) :].lstrip()
+        try:
+            observation, consumed = decoder.raw_decode(raw)
+        except (json.JSONDecodeError, TypeError):
+            cursor = marker_index + len(marker)
+            continue
+        if isinstance(observation, dict):
+            observations.append(observation)
+        cursor = marker_index + len(marker) + consumed
+
+
+def _user_ids(prompt: str) -> list[str]:
+    """Return distinct synthetic user IDs while preserving their input order."""
+    import re
+
+    found: list[str] = []
+    seen: set[str] = set()
+    for match in re.finditer(r"\bU(?:SR)?\d{3}\b", prompt, flags=re.IGNORECASE):
+        user_id = match.group(0).upper()
+        if user_id not in seen:
+            found.append(user_id)
+            seen.add(user_id)
+    return found
+
+
+def _date_constraints(prompt: str) -> tuple[str, int]:
+    """Extract the deterministic city and maximum budget used by the mock."""
+    import re
+
+    text = prompt.casefold()
+    if any(alias in text for alias in ("hà nội", "ha noi", "hanoi")):
+        city = "Hanoi"
+    elif any(alias in text for alias in ("hồ chí minh", "ho chi minh", "tp.hcm")):
+        city = "Ho Chi Minh City"
+    else:
+        city = ""
+
+    budget = 0
+    for match in re.finditer(r"\b\d{1,3}(?:[.\s]\d{3})+\b|\b\d{4,}\b", prompt):
+        candidate = int(re.sub(r"[.\s]", "", match.group(0)))
+        budget = max(budget, candidate)
+    return city, budget
+
+
 class GeminiProvider(BaseLLMProvider):
     """Google Gemini Provider"""
     def __init__(self, api_key: str = None, model: str = None):
@@ -154,6 +208,7 @@ class MockProvider(BaseLLMProvider):
         text = prompt.lower()
         is_react = "giao thức react" in system_prompt.lower() or "react agent" in system_prompt.lower()
         observation = _latest_observation(prompt)
+        observations = _all_observations(prompt)
 
         if is_react and observation:
             output = observation.get("output") or {}
@@ -170,15 +225,30 @@ class MockProvider(BaseLLMProvider):
                     )
                 aligned = [
                     name
-                    for name, score in (data.get("dimension_scores") or {}).items()
+                    for name, score in (
+                        data.get("breakdown") or data.get("dimension_scores") or {}
+                    ).items()
                     if score == 100
                 ]
                 aligned_text = ", ".join(aligned[:3]) or "các tiêu chí đã chia sẻ"
+                breakdown = data.get("breakdown") or data.get("dimension_scores") or {}
+                breakdown_text = ", ".join(
+                    f"{dimension}={score}" for dimension, score in breakdown.items()
+                )
+                strengths = "; ".join(data.get("strengths") or [aligned_text])
+                conflicts = "; ".join(data.get("potential_conflicts") or ["Không có"])
+                arguments = observation.get("arguments") or []
+                user_id = arguments[0] if arguments else "người dùng"
+                candidate_id = data.get("candidate_id") or (
+                    arguments[1] if len(arguments) > 1 else "ứng viên"
+                )
                 return (
                     "Thought: Observation đã có điểm và các chiều tương thích cần thiết.\n"
-                    f"Final Answer: Điểm tương thích là {data.get('score')}, "
-                    f"mức tin cậy {data.get('confidence')}. "
-                    f"Các chiều phù hợp nổi bật: {aligned_text}. "
+                    f"Final Answer: Theo dữ liệu từ công cụ, {candidate_id} có score={data.get('score')} "
+                    f"với {user_id}, confidence={data.get('confidence')}. "
+                    f"Breakdown: {breakdown_text}. "
+                    f"Điểm mạnh: {strengths}. "
+                    f"Xung đột tiềm ẩn: {conflicts}. "
                     "Đây chỉ là ước lượng từ dữ liệu đã đồng ý chia sẻ, "
                     "không bảo đảm kết quả mối quan hệ."
                 )
@@ -192,9 +262,16 @@ class MockProvider(BaseLLMProvider):
                         "Tôi không tự tạo dữ liệu thay thế."
                     )
                 serialized_interests = json.dumps(interests, ensure_ascii=False)
+                city, budget = _date_constraints(prompt)
+                if not city or not budget:
+                    return (
+                        "Thought: Đã có sở thích chung nhưng còn thiếu thành phố hoặc ngân sách.\n"
+                        "Final Answer: Vui lòng cung cấp thành phố và ngân sách tối đa để tôi tìm hoạt động phù hợp."
+                    )
                 return (
                     "Thought: Tôi sẽ dùng đúng sở thích chung từ Observation để tìm hoạt động.\n"
-                    f'Action: search_date_activities["Ha Noi", {serialized_interests}, 500000]'
+                    f"Action: search_date_activities[{json.dumps(city, ensure_ascii=False)}, "
+                    f"{serialized_interests}, {budget}]"
                 )
 
             if tool_name == "search_date_activities":
@@ -208,13 +285,34 @@ class MockProvider(BaseLLMProvider):
                 suggestions = "; ".join(
                     (
                         f"{item.get('name')} tại {item.get('city')}, "
-                        f"chi phí ước tính {item.get('estimated_pair_cost')} VND"
+                        f"chi phí ước tính {item.get('estimated_cost')} VND"
                     )
                     for item in activities[:2]
                 )
+                shared_observation = next(
+                    (
+                        item
+                        for item in reversed(observations)
+                        if item.get("tool") == "get_shared_interests"
+                    ),
+                    {},
+                )
+                shared_data = (shared_observation.get("output") or {}).get("data") or {}
+                shared_interests = shared_data.get("shared_interests") or []
+                pair_text = " và ".join(
+                    filter(
+                        None,
+                        [
+                            shared_data.get("user_a_id"),
+                            shared_data.get("user_b_id"),
+                        ],
+                    )
+                )
+                shared_text = ", ".join(shared_interests)
                 return (
                     "Thought: Observation đã có hoạt động phù hợp để đề xuất.\n"
-                    f"Final Answer: Gợi ý từ công cụ: {suggestions}. "
+                    f"Final Answer: {pair_text} có sở thích chung: {shared_text}. "
+                    f"Gợi ý từ công cụ: {suggestions}. "
                     "Đây chỉ là đề xuất; hệ thống chưa đặt chỗ, liên hệ hoặc thanh toán."
                 )
 
@@ -230,51 +328,33 @@ class MockProvider(BaseLLMProvider):
                 "Bạn có thể gửi lời mời kết nối trong ứng dụng để người kia tự quyết định có chia sẻ thông tin hay không."
             )
 
-        if "observation" in text and "calculate_compatibility" in text:
-            return (
-                "Thought: Tôi đã có Observation về điểm tương thích và có thể trả lời dựa trên dữ liệu đó.\n"
-                "Final Answer: Theo dữ liệu từ công cụ, U003 có điểm tương thích 86 với U001, độ tin cậy 92. "
-                "Điểm mạnh là cùng định hướng mối quan hệ lâu dài và tương đồng về giá trị sống. "
-                "Điểm cần lưu ý là khác biệt về mức độ giao tiếp xã hội. Đây chỉ là ước lượng hỗ trợ tham khảo, "
-                "không bảo đảm hai người sẽ phù hợp trong quan hệ thực tế."
-            )
-
-        if "observation" in text and "search_date_activities" in text:
-            return (
-                "Thought: Tôi đã có sở thích chung và danh sách hoạt động phù hợp ngân sách.\n"
-                "Final Answer: U001 và U003 có sở thích chung gồm photography, coffee và art. "
-                "Một gợi ý phù hợp ở Hanoi là Cafe triển lãm ảnh với chi phí ước tính 250000 đồng; "
-                "ngoài ra Workshop làm gốm có chi phí 400000 đồng. Đây chỉ là đề xuất, hệ thống chưa đặt chỗ, "
-                "chưa liên hệ và chưa thanh toán."
-            )
-
-        if "observation" in text and "get_shared_interests" in text:
-            return (
-                "Thought: Tôi đã có sở thích chung, cần dùng chính danh sách này để tìm hoạt động hẹn phù hợp.\n"
-                "Action: search_date_activities[\"Hanoi\", [\"photography\", \"coffee\", \"art\"], 500000]"
-            )
-
-        if "u001" in text and "u003" in text and (
+        user_ids = _user_ids(prompt)
+        if len(user_ids) >= 2 and (
             "sở thích chung" in text or "so thich chung" in text or "hoạt động hẹn" in text
         ):
             return (
                 "Thought: Cần lấy sở thích chung của hai user trước khi gợi ý hoạt động.\n"
-                "Action: get_shared_interests[\"U001\", \"U003\"]"
+                f"Action: get_shared_interests[{json.dumps(user_ids[0])}, "
+                f"{json.dumps(user_ids[1])}]"
             )
 
-        if "u001" in text and "u003" in text and (
+        if len(user_ids) >= 2 and (
             "tương thích" in text or "tuong thich" in text or "compatibility" in text
         ):
             return (
                 "Thought: Cần gọi công cụ tính tương thích cho đúng hai user ID.\n"
-                "Action: calculate_compatibility[\"U001\", \"U003\"]"
+                f"Action: calculate_compatibility[{json.dumps(user_ids[0])}, "
+                f"{json.dumps(user_ids[1])}]"
             )
 
         if "hard constraint" in text and "soft preference" in text:
             return (
                 "Hard constraint là điều kiện bắt buộc; nếu vi phạm thì candidate phải bị loại. "
                 "Soft preference là sở thích dùng để xếp hạng hoặc cân nhắc giữa các lựa chọn. "
-                "Ví dụ hard constraint: chỉ ghép với người đã có consent. Ví dụ soft preference: thích cafe hoặc nghệ thuật."
+                "Ví dụ hard constraint: người dùng yêu cầu cùng mục tiêu mối quan hệ lâu dài, nên candidate "
+                "có relationship goal khác phải bị loại. Ví dụ soft preference: các interests (sở thích) như coffee "
+                "hoặc art có thể dùng để ưu tiên xếp hạng. Hệ thống không được tự nới hard constraint "
+                "khi thiếu candidate."
             )
 
         if "điểm tương thích" in text or "diem tuong thich" in text or "compatibility score" in text:

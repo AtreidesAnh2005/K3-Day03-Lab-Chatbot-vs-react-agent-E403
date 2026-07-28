@@ -1,6 +1,7 @@
 [
   {
     "user_id": "USR001",
+    "external_id": "U001",
     "display_name": "Minh",
     "age": 26,
     "city": "Ha Noi",
@@ -8,7 +9,7 @@
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "serious",
-    "interests": ["coffee", "reading", "art", "cooking"],
+    "interests": ["photography", "coffee", "art", "reading", "cooking"],
     "values": ["family", "personal_growth", "kindness"],
     "lifestyle": {"smoking": false, "drinking": "occasionally", "exercise": "regularly"},
     "communication_style": "direct",
@@ -19,6 +20,7 @@
   },
   {
     "user_id": "USR002",
+    "external_id": "U002",
     "display_name": "Lan",
     "age": 25,
     "city": "Ha Noi",
@@ -37,17 +39,18 @@
   },
   {
     "user_id": "USR003",
+    "external_id": "U003",
     "display_name": "An",
     "age": 27,
     "city": "Ha Noi",
     "active": true,
     "matching_enabled": true,
     "consent_to_matching": true,
-    "relationship_goal": "casual",
-    "interests": ["coffee", "travel", "music"],
-    "values": ["adventure", "independence"],
+    "relationship_goal": "serious",
+    "interests": ["photography", "coffee", "art", "travel", "music"],
+    "values": ["family", "personal_growth", "independence"],
     "lifestyle": {"smoking": false, "drinking": "occasionally", "exercise": "sometimes"},
-    "communication_style": "direct",
+    "communication_style": "social",
     "future_plans": {"preferred_city": "Ha Noi", "wants_children": "no", "relocation": "no"},
     "availability": ["friday_evening"],
     "date_preferences": {"max_budget": 400000, "indoor_preference": "either"},
@@ -55,6 +58,7 @@
   },
   {
     "user_id": "USR004",
+    "external_id": "U004",
     "display_name": "Hoa",
     "age": 24,
     "city": "Ha Noi",
@@ -73,6 +77,7 @@
   },
   {
     "user_id": "USR005",
+    "external_id": "U005",
     "display_name": "Khanh",
     "age": 28,
     "city": "Ha Noi",
@@ -91,6 +96,7 @@
   },
   {
     "user_id": "USR006",
+    "external_id": "U006",
     "display_name": "Vy",
     "age": 29,
     "city": "Ha Noi",
@@ -109,6 +115,7 @@
   },
   {
     "user_id": "USR007",
+    "external_id": "U007",
     "display_name": "Nam",
     "age": 30,
     "city": "Ha Noi",
@@ -127,6 +134,7 @@
   },
   {
     "user_id": "USR008",
+    "external_id": "U008",
     "display_name": "Mai",
     "age": 23,
     "city": "Ha Noi",
@@ -145,6 +153,7 @@
   },
   {
     "user_id": "USR009",
+    "external_id": "U009",
     "display_name": "Quang",
     "age": 31,
     "city": "Ho Chi Minh City",
@@ -152,7 +161,7 @@
     "matching_enabled": true,
     "consent_to_matching": true,
     "relationship_goal": "serious",
-    "interests": ["hiking", "photography", "music"],
+    "interests": ["hiking", "music"],
     "values": ["personal_growth", "independence"],
     "lifestyle": {"smoking": false, "drinking": "rarely", "exercise": "regularly"},
     "communication_style": "reflective",
@@ -163,6 +172,7 @@
   },
   {
     "user_id": "USR010",
+    "external_id": "U010",
     "display_name": "Linh",
     "age": 27,
     "city": "Ha Noi",

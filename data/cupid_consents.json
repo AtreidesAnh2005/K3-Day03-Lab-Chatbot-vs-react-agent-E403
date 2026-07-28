@@ -16,6 +16,8 @@
   {
     "owner_id": "USR003",
     "viewer_id": "USR001",
+    "external_owner_id": "U003",
+    "external_viewer_id": "U001",
     "consent_active": true,
     "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
     "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]
@@ -23,6 +25,8 @@
   {
     "owner_id": "USR001",
     "viewer_id": "USR003",
+    "external_owner_id": "U001",
+    "external_viewer_id": "U003",
     "consent_active": true,
     "allowed_fields": ["basic_profile", "relationship_goal", "interests", "values", "lifestyle", "communication_style", "future_plans", "availability", "date_preferences"],
     "restricted_fields": ["private_messages", "contact_information", "raw_preferences"]

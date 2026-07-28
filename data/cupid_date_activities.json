@@ -1,12 +1,12 @@
 [
-  {"activity_id": "A01", "name": "Workshop lam gom", "city": "Ha Noi", "interests": ["art", "creative"], "base_cost": 400000, "cost_unit": "per_pair", "indoor": true, "duration_minutes": 120, "active": true},
-  {"activity_id": "A02", "name": "Coffee book talk", "city": "Ha Noi", "interests": ["coffee", "reading"], "base_cost": 220000, "cost_unit": "per_pair", "indoor": true, "duration_minutes": 90, "active": true},
-  {"activity_id": "A03", "name": "Ho Guom walking route", "city": "Ha Noi", "interests": ["walking", "photography"], "base_cost": 0, "cost_unit": "per_pair", "indoor": false, "duration_minutes": 75, "active": true},
-  {"activity_id": "A04", "name": "Cooking mini class", "city": "Ha Noi", "interests": ["cooking", "creative"], "base_cost": 280000, "cost_unit": "per_person", "indoor": true, "duration_minutes": 150, "active": true},
-  {"activity_id": "A05", "name": "Acoustic night", "city": "Ha Noi", "interests": ["music", "coffee"], "base_cost": 180000, "cost_unit": "per_person", "indoor": true, "duration_minutes": 120, "active": true},
+  {"activity_id": "A01", "name": "Workshop làm gốm", "city": "Hanoi", "interests": ["art", "creative"], "base_cost": 400000, "cost_unit": "per_pair", "indoor": true, "duration_minutes": 120, "active": true},
+  {"activity_id": "A02", "name": "Cafe triển lãm ảnh", "city": "Hanoi", "interests": ["photography", "coffee", "art"], "base_cost": 250000, "cost_unit": "per_pair", "indoor": true, "duration_minutes": 90, "active": true},
+  {"activity_id": "A03", "name": "Ho Guom walking route", "city": "Hanoi", "interests": ["walking", "outdoor"], "base_cost": 0, "cost_unit": "per_pair", "indoor": false, "duration_minutes": 75, "active": true},
+  {"activity_id": "A04", "name": "Cooking mini class", "city": "Hanoi", "interests": ["cooking", "creative"], "base_cost": 280000, "cost_unit": "per_person", "indoor": true, "duration_minutes": 150, "active": true},
+  {"activity_id": "A05", "name": "Acoustic night", "city": "Hanoi", "interests": ["music", "conversation"], "base_cost": 180000, "cost_unit": "per_person", "indoor": true, "duration_minutes": 120, "active": true},
   {"activity_id": "A06", "name": "Cycling riverside", "city": "Ho Chi Minh City", "interests": ["cycling", "outdoor"], "base_cost": 120000, "cost_unit": "per_person", "indoor": false, "duration_minutes": 120, "active": true},
   {"activity_id": "A07", "name": "Photo walk", "city": "Ho Chi Minh City", "interests": ["photography", "walking"], "base_cost": 0, "cost_unit": "per_pair", "indoor": false, "duration_minutes": 90, "active": true},
   {"activity_id": "A08", "name": "Rooftop mocktail", "city": "Ho Chi Minh City", "interests": ["music", "conversation"], "base_cost": 350000, "cost_unit": "per_person", "indoor": false, "duration_minutes": 120, "active": true},
-  {"activity_id": "A09", "name": "Museum afternoon", "city": "Ha Noi", "interests": ["art", "history"], "base_cost": 80000, "cost_unit": "per_person", "indoor": true, "duration_minutes": 100, "active": true},
-  {"activity_id": "A10", "name": "Closed cinema event", "city": "Ha Noi", "interests": ["cinema"], "base_cost": 600000, "cost_unit": "per_pair", "indoor": true, "duration_minutes": 130, "active": false}
+  {"activity_id": "A09", "name": "Museum afternoon", "city": "Hanoi", "interests": ["history", "culture"], "base_cost": 80000, "cost_unit": "per_person", "indoor": true, "duration_minutes": 100, "active": true},
+  {"activity_id": "A10", "name": "Closed cinema event", "city": "Hanoi", "interests": ["cinema"], "base_cost": 600000, "cost_unit": "per_pair", "indoor": true, "duration_minutes": 130, "active": false}
 ]

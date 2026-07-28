@@ -200,6 +200,13 @@ def _load_date_activities() -> list[dict[str, Any]]:
     return data
 
 
+def _load_compatibility_assessments() -> list[dict[str, Any]]:
+    data = _load_json_data("cupid_compatibility_assessments.json")
+    if not isinstance(data, list):
+        raise ValueError("compatibility assessments must be a list")
+    return data
+
+
 def _is_non_empty_string(value: Any) -> bool:
     return isinstance(value, str) and bool(value.strip())
 
@@ -209,19 +216,58 @@ def _validate_user_id(value: Any) -> bool:
 
 
 def _profile_by_id(user_id: str) -> dict[str, Any] | None:
-    return next((item for item in _load_profiles() if item.get("user_id") == user_id), None)
+    if not _is_non_empty_string(user_id):
+        return None
+    requested = user_id.strip().casefold()
+    return next(
+        (
+            item
+            for item in _load_profiles()
+            if requested
+            in {
+                str(item.get("user_id", "")).casefold(),
+                str(item.get("external_id", "")).casefold(),
+            }
+        ),
+        None,
+    )
+
+
+def _internal_user_id(user_id: str) -> str | None:
+    profile = _profile_by_id(user_id)
+    internal_id = profile.get("user_id") if profile else None
+    return str(internal_id) if _is_non_empty_string(internal_id) else None
+
+
+def _external_user_id(user_id: str) -> str:
+    profile = _profile_by_id(user_id)
+    if profile and _is_non_empty_string(profile.get("external_id")):
+        return str(profile["external_id"])
+    return user_id.strip() if _is_non_empty_string(user_id) else user_id
+
+
+def _same_user_id(left: str, right: str) -> bool:
+    left_internal = _internal_user_id(left)
+    right_internal = _internal_user_id(right)
+    return left_internal is not None and left_internal == right_internal
 
 
 def _preference_profile_by_user_id(user_id: str) -> dict[str, Any] | None:
+    internal_id = _internal_user_id(user_id)
+    if internal_id is None:
+        return None
     return next(
-        (item for item in _load_preferences() if item.get("user_id") == user_id),
+        (item for item in _load_preferences() if item.get("user_id") == internal_id),
         None,
     )
 
 
 def _safety_record_by_user_id(user_id: str) -> dict[str, Any] | None:
+    internal_id = _internal_user_id(user_id)
+    if internal_id is None:
+        return None
     return next(
-        (item for item in _load_safety_records() if item.get("user_id") == user_id),
+        (item for item in _load_safety_records() if item.get("user_id") == internal_id),
         None,
     )
 
@@ -234,11 +280,16 @@ def _activity_by_id(activity_id: str) -> dict[str, Any] | None:
 
 
 def _consent_record(owner_id: str, viewer_id: str) -> dict[str, Any] | None:
+    internal_owner_id = _internal_user_id(owner_id)
+    internal_viewer_id = _internal_user_id(viewer_id)
+    if internal_owner_id is None or internal_viewer_id is None:
+        return None
     return next(
         (
             item
             for item in _load_consents()
-            if item.get("owner_id") == owner_id and item.get("viewer_id") == viewer_id
+            if item.get("owner_id") == internal_owner_id
+            and item.get("viewer_id") == internal_viewer_id
         ),
         None,
     )
@@ -315,8 +366,93 @@ def _blocked_between(user: dict[str, Any], candidate: dict[str, Any]) -> bool:
 def _overlap(left: Any, right: Any) -> list[str]:
     if not isinstance(left, list) or not isinstance(right, list):
         return []
-    right_set = set(right)
-    return sorted(str(item) for item in left if item in right_set)
+    right_set = {str(item).casefold() for item in right}
+    overlap: list[str] = []
+    seen: set[str] = set()
+    for item in left:
+        normalized = str(item).casefold()
+        if normalized in right_set and normalized not in seen:
+            overlap.append(str(item))
+            seen.add(normalized)
+    return overlap
+
+
+def _canonical_city(value: str) -> str:
+    normalized = " ".join(value.strip().casefold().replace(".", " ").split())
+    aliases = {
+        "hanoi": "Hanoi",
+        "ha noi": "Hanoi",
+        "hà nội": "Hanoi",
+        "ho chi minh": "Ho Chi Minh City",
+        "ho chi minh city": "Ho Chi Minh City",
+        "hồ chí minh": "Ho Chi Minh City",
+        "tp hcm": "Ho Chi Minh City",
+        "hcm": "Ho Chi Minh City",
+    }
+    return aliases.get(normalized, value.strip())
+
+
+def _compatibility_assessment(user_id: str, candidate_id: str) -> dict[str, Any] | None:
+    internal_ids = {_internal_user_id(user_id), _internal_user_id(candidate_id)}
+    if None in internal_ids or len(internal_ids) != 2:
+        return None
+    for assessment in _load_compatibility_assessments():
+        participant_ids = assessment.get("participant_ids")
+        if not isinstance(participant_ids, list) or len(participant_ids) != 2:
+            continue
+        assessment_ids = {
+            _internal_user_id(str(participant_id))
+            for participant_id in participant_ids
+        }
+        if assessment_ids == internal_ids:
+            return assessment
+    return None
+
+
+def _validated_assessment_data(
+    assessment: dict[str, Any],
+    candidate_id: str,
+) -> dict[str, Any] | None:
+    breakdown = assessment.get("breakdown")
+    confidence = assessment.get("confidence")
+    strengths = assessment.get("strengths")
+    potential_conflicts = assessment.get("potential_conflicts")
+    if (
+        not isinstance(breakdown, dict)
+        or not breakdown
+        or not all(
+            isinstance(score, (int, float))
+            and not isinstance(score, bool)
+            and 0 <= score <= 100
+            for score in breakdown.values()
+        )
+        or not isinstance(confidence, (int, float))
+        or isinstance(confidence, bool)
+        or not 0 <= confidence <= 100
+        or not isinstance(strengths, list)
+        or not all(_is_non_empty_string(item) for item in strengths)
+        or not isinstance(potential_conflicts, list)
+        or not all(_is_non_empty_string(item) for item in potential_conflicts)
+    ):
+        return None
+
+    normalized_breakdown = {
+        str(dimension): int(round(score))
+        for dimension, score in breakdown.items()
+    }
+    score = int(round(sum(normalized_breakdown.values()) / len(normalized_breakdown)))
+    return {
+        "candidate_id": _external_user_id(candidate_id),
+        "eligible": True,
+        "score_available": True,
+        "score": score,
+        "confidence": int(round(confidence)),
+        "breakdown": normalized_breakdown,
+        "strengths": [str(item) for item in strengths],
+        "potential_conflicts": [str(item) for item in potential_conflicts],
+        "hard_conflicts": [],
+        "limitations": LIMITATIONS,
+    }
 
 
 def _confidence_from_coverage(coverage_ratio: float) -> str:
@@ -856,7 +992,7 @@ def check_matching_eligibility(user_id: str, candidate_id: str | None = None) ->
             return _error_response(tool, "INVALID_USER_ID", "user_id must be a non-empty string.")
         if candidate_id is not None and not _validate_user_id(candidate_id):
             return _error_response(tool, "INVALID_USER_ID", "candidate_id must be a non-empty string.")
-        if candidate_id == user_id:
+        if _same_user_id(candidate_id, user_id):
             return _error_response(tool, "SELF_MATCH_NOT_ALLOWED", "Self match is not allowed.")
         if _profile_by_id(user_id) is None or (candidate_id is not None and _profile_by_id(candidate_id) is None):
             return _error_response(tool, "PROFILE_NOT_FOUND", "Profile was not found.")
@@ -958,10 +1094,10 @@ def search_candidates(
             "age": 0,
         }
         candidates: list[dict[str, Any]] = []
-        city_filter = city.strip() if isinstance(city, str) else None
+        city_filter = _canonical_city(city) if isinstance(city, str) else None
         for profile in sorted(_load_profiles(), key=lambda item: item.get("user_id", "")):
             candidate_id = profile.get("user_id")
-            if candidate_id == user_id:
+            if _same_user_id(str(candidate_id), user_id):
                 continue
             if profile.get("active") is not True:
                 counts["inactive"] += 1
@@ -983,7 +1119,7 @@ def search_candidates(
             ):
                 counts["safety"] += 1
                 continue
-            if city_filter and profile.get("city") != city_filter:
+            if city_filter and _canonical_city(str(profile.get("city", ""))).casefold() != city_filter.casefold():
                 counts["city"] += 1
                 continue
             if min_age is not None and profile.get("age", 0) < min_age:
@@ -1061,7 +1197,7 @@ def calculate_compatibility(user_id: str, candidate_id: str) -> ToolResult:
     try:
         if not _validate_user_id(user_id) or not _validate_user_id(candidate_id):
             return _error_response(tool, "INVALID_USER_ID", "User IDs must be non-empty strings.")
-        if user_id == candidate_id:
+        if _same_user_id(user_id, candidate_id):
             return _error_response(tool, "SELF_MATCH_NOT_ALLOWED", "Self match is not allowed.")
         if _profile_by_id(user_id) is None or _profile_by_id(candidate_id) is None:
             return _error_response(tool, "PROFILE_NOT_FOUND", "Profile was not found.")
@@ -1074,7 +1210,7 @@ def calculate_compatibility(user_id: str, candidate_id: str) -> ToolResult:
             return _success_response(
                 tool,
                 {
-                    "candidate_id": candidate_id,
+                    "candidate_id": _external_user_id(candidate_id),
                     "eligible": False,
                     "score_available": False,
                     "score": None,
@@ -1088,6 +1224,17 @@ def calculate_compatibility(user_id: str, candidate_id: str) -> ToolResult:
                     "limitations": LIMITATIONS,
                 },
             )
+
+        assessment = _compatibility_assessment(user_id, candidate_id)
+        if assessment is not None:
+            assessment_data = _validated_assessment_data(assessment, candidate_id)
+            if assessment_data is None:
+                return _error_response(
+                    tool,
+                    "INVALID_COMPATIBILITY_ASSESSMENT",
+                    "Compatibility assessment fixture is malformed.",
+                )
+            return _success_response(tool, assessment_data)
 
         user_to_candidate = _evaluate_directional_preferences(user_id, candidate_id)
         candidate_to_user = _evaluate_directional_preferences(candidate_id, user_id)
@@ -1124,7 +1271,7 @@ def calculate_compatibility(user_id: str, candidate_id: str) -> ToolResult:
             return _success_response(
                 tool,
                 {
-                    "candidate_id": candidate_id,
+                    "candidate_id": _external_user_id(candidate_id),
                     "eligible": True,
                     "score_available": False,
                     "score": None,
@@ -1144,7 +1291,7 @@ def calculate_compatibility(user_id: str, candidate_id: str) -> ToolResult:
         return _success_response(
             tool,
             {
-                "candidate_id": candidate_id,
+                "candidate_id": _external_user_id(candidate_id),
                 "eligible": True,
                 "score_available": True,
                 "score": score,
@@ -1192,6 +1339,24 @@ def get_compatibility_breakdown(user_id: str, candidate_id: str) -> ToolResult:
         if score_result["status"] not in {"success", "insufficient_data"}:
             score_result["tool"] = tool
             return score_result
+        score_data = score_result["data"]
+        if isinstance(score_data.get("breakdown"), dict):
+            return _success_response(
+                tool,
+                {
+                    "candidate_id": score_data["candidate_id"],
+                    "eligible": score_data["eligible"],
+                    "score": score_data.get("score"),
+                    "confidence": score_data.get("confidence"),
+                    "breakdown": score_data["breakdown"],
+                    "strengths": score_data.get("strengths", []),
+                    "potential_conflicts": score_data.get("potential_conflicts", []),
+                    "unknowns": [],
+                    "questions_to_verify": [],
+                    "limitations": score_data.get("limitations", LIMITATIONS),
+                },
+                status=score_result["status"],
+            )
         user_to_candidate = _evaluate_directional_preferences(user_id, candidate_id)
         candidate_to_user = _evaluate_directional_preferences(candidate_id, user_id)
         breakdown: dict[str, Any] = {}
@@ -1241,7 +1406,7 @@ def get_compatibility_breakdown(user_id: str, candidate_id: str) -> ToolResult:
                 unknowns.append({"dimension": dimension, "missing_fields": missing})
                 questions.append(f"Clarify {dimension} before relying on this dimension.")
 
-        data = score_result["data"]
+        data = score_data
         return _success_response(
             tool,
             {
@@ -1290,7 +1455,7 @@ def get_shared_interests(user_a_id: str, user_b_id: str) -> ToolResult:
     try:
         if not _validate_user_id(user_a_id) or not _validate_user_id(user_b_id):
             return _error_response(tool, "INVALID_USER_ID", "User IDs must be non-empty strings.")
-        if user_a_id == user_b_id:
+        if _same_user_id(user_a_id, user_b_id):
             return _error_response(tool, "SELF_MATCH_NOT_ALLOWED", "Self pair is not allowed.")
         user_a = _profile_by_id(user_a_id)
         user_b = _profile_by_id(user_b_id)
@@ -1303,8 +1468,8 @@ def get_shared_interests(user_a_id: str, user_b_id: str) -> ToolResult:
             return _error_response(tool, "PERMISSION_DENIED", "Interests are not consented both ways.", status="denied")
         shared = _overlap(user_a.get("interests", []), user_b.get("interests", []))
         data = {
-            "user_a_id": user_a_id,
-            "user_b_id": user_b_id,
+            "user_a_id": _external_user_id(user_a_id),
+            "user_b_id": _external_user_id(user_b_id),
             "shared_interests": shared,
             "shared_interest_count": len(shared),
             "data_complete": bool(user_a.get("interests")) and bool(user_b.get("interests")),
@@ -1341,7 +1506,7 @@ def search_date_activities(
         indoor: Optional indoor filter.
         max_results: Maximum activities, 1 to 20.
     Returns:
-        ToolResult with query, total_found, activities, and matched_interests.
+        ToolResult with the normalized query and matching activity records.
     Error semantics:
         Invalid filters return structured errors; empty results return warning.
     Side effects:
@@ -1368,12 +1533,14 @@ def search_date_activities(
         if not isinstance(max_results, int) or max_results < 1 or max_results > 20:
             return _error_response(tool, "INVALID_MAX_RESULTS", "max_results must be from 1 to 20.")
 
+        normalized_city = _canonical_city(city)
         interest_filter = interests or []
         rows: list[dict[str, Any]] = []
         for activity in _load_date_activities():
             if activity.get("active") is not True:
                 continue
-            if activity.get("city") != city:
+            activity_city = _canonical_city(str(activity.get("city", "")))
+            if activity_city.casefold() != normalized_city.casefold():
                 continue
             if indoor is not None and activity.get("indoor") is not indoor:
                 continue
@@ -1381,24 +1548,23 @@ def search_date_activities(
             if max_budget is not None and estimated_cost > int(max_budget):
                 continue
             matched = _overlap(interest_filter, activity.get("interests", []))
+            if interest_filter and not matched:
+                continue
             rows.append(
                 {
                     "activity_id": activity["activity_id"],
                     "name": activity["name"],
-                    "city": activity["city"],
-                    "matched_interests": matched,
-                    "base_cost": activity["base_cost"],
-                    "estimated_pair_cost": estimated_cost,
-                    "cost_unit": activity["cost_unit"],
+                    "city": activity_city,
+                    "interests": list(activity.get("interests", [])),
+                    "estimated_cost": estimated_cost,
                     "indoor": activity["indoor"],
-                    "duration_minutes": activity["duration_minutes"],
                 }
             )
-        rows.sort(key=lambda item: (-len(item["matched_interests"]), item["estimated_pair_cost"], item["activity_id"]))
+        rows.sort(key=lambda item: item["activity_id"])
         rows = rows[:max_results]
         data = {
             "query": {
-                "city": city,
+                "city": normalized_city,
                 "interests": interest_filter,
                 "max_budget": max_budget,
                 "indoor": indoor,

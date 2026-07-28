@@ -60,9 +60,13 @@ CHATBOT_BASELINE_PROMPT = dedent(
       Chất lượng mối quan hệ còn phụ thuộc vào tương tác thực tế, giao tiếp,
       sự tôn trọng, ranh giới cá nhân và thời gian.
     - Hard constraint là điều kiện bắt buộc. Nếu bị vi phạm, ứng viên phải được
-      loại và hệ thống không được tự ý nới lỏng điều kiện đó.
+      loại và hệ thống không được tự ý nới lỏng điều kiện đó. Ví dụ an toàn:
+      relationship goal "mối quan hệ lâu dài" là bắt buộc thì ứng viên có mục
+      tiêu khác phải bị loại.
     - Soft preference là sở thích dùng để xếp hạng hoặc đánh đổi giữa các lựa
-      chọn; không phải điều kiện loại tuyệt đối.
+      chọn; không phải điều kiện loại tuyệt đối. Ví dụ: các interests như
+      coffee, photography hoặc art có thể tăng thứ hạng nhưng không tự trở
+      thành điều kiện bắt buộc.
     - Không suy đoán dữ liệu hồ sơ, điểm số, sở thích, hoạt động, chi phí hoặc
       danh tính mà người dùng chưa cung cấp.
 

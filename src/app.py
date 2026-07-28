@@ -214,21 +214,22 @@ def parse_react_output(response: str) -> ParsedReactResponse:
 def _normalize_user_id(value: Any) -> Any:
     if not isinstance(value, str):
         return value
-    match = re.fullmatch(r"U(\d{3})", value.strip(), flags=re.IGNORECASE)
-    return f"USR{match.group(1)}" if match else value
+    return value.strip()
 
 
 def _normalize_city(value: Any) -> Any:
     if not isinstance(value, str):
         return value
     aliases = {
-        "hanoi": "Ha Noi",
-        "hà nội": "Ha Noi",
+        "hanoi": "Hanoi",
+        "ha noi": "Hanoi",
+        "hà nội": "Hanoi",
         "ho chi minh": "Ho Chi Minh City",
+        "ho chi minh city": "Ho Chi Minh City",
         "tp.hcm": "Ho Chi Minh City",
         "hồ chí minh": "Ho Chi Minh City",
     }
-    return aliases.get(value.strip().casefold(), value)
+    return aliases.get(value.strip().casefold(), value.strip())
 
 
 def _normalize_tool_arguments(
@@ -315,14 +316,20 @@ def render_observation(observation: dict[str, Any]) -> str:
     return json.dumps(observation, ensure_ascii=False, indent=2)
 
 
+def _finalize_safe_fallback(*, safety_verdict: str | None = None) -> str:
+    print(f"Final Answer: {SAFE_FALLBACK_MESSAGE}")
+    if safety_verdict:
+        print(f"Safety Verdict: {safety_verdict}")
+    return SAFE_FALLBACK_MESSAGE
+
+
 def run_react_agent(user_query: str, provider: Any) -> str:
     """Run a guarded Thought -> Action -> Observation -> Final Answer loop."""
     print(f"\n[REACT AGENT] Câu hỏi: {user_query}")
 
     if is_safety_blocked(user_query):
         print("GUARDRAIL: blocked before tool use.")
-        print(f"Final Answer: {SAFE_FALLBACK_MESSAGE}")
-        return SAFE_FALLBACK_MESSAGE
+        return _finalize_safe_fallback(safety_verdict="BLOCK")
 
     conversation = f"User request: {user_query}"
     action_history: dict[str, int] = {}
@@ -335,11 +342,12 @@ def run_react_agent(user_query: str, provider: Any) -> str:
         parsed = parse_react_output(response)
         if parsed.parser_error:
             print(f"Parser Error: {parsed.parser_error}")
-            return SAFE_FALLBACK_MESSAGE
+            return _finalize_safe_fallback()
         if parsed.final_answer:
             return parsed.final_answer
         if not parsed.action_name or parsed.action_args is None:
-            return SAFE_FALLBACK_MESSAGE
+            print("GUARDRAIL: response did not contain a valid action.")
+            return _finalize_safe_fallback()
 
         normalized_args = _normalize_tool_arguments(parsed.action_name, parsed.action_args)
         action_key = json.dumps(
@@ -350,7 +358,7 @@ def run_react_agent(user_query: str, provider: Any) -> str:
         action_history[action_key] = action_history.get(action_key, 0) + 1
         if action_history[action_key] > MAX_REPEATED_ACTIONS:
             print("GUARDRAIL: repeated action detected.")
-            return SAFE_FALLBACK_MESSAGE
+            return _finalize_safe_fallback()
 
         observation = execute_tool(parsed.action_name, parsed.action_args)
         observation_text = render_observation(observation)
@@ -358,7 +366,7 @@ def run_react_agent(user_query: str, provider: Any) -> str:
 
         if not observation.get("ok"):
             print("GUARDRAIL: tool denied or failed.")
-            return SAFE_FALLBACK_MESSAGE
+            return _finalize_safe_fallback()
 
         conversation = (
             f"{conversation}\n\n"
@@ -368,7 +376,7 @@ def run_react_agent(user_query: str, provider: Any) -> str:
         )
 
     print(f"GUARDRAIL: max iterations reached ({MAX_ITERATIONS}).")
-    return SAFE_FALLBACK_MESSAGE
+    return _finalize_safe_fallback()
 
 
 def should_use_react(test_case: dict[str, Any]) -> bool:
@@ -435,10 +443,13 @@ def _candidate_api_model(candidate_id: str) -> dict[str, Any] | None:
     )
     profile = profile_data["profile"]
 
-    reasons = [
-        f"{DIMENSION_LABELS.get(item.get('dimension'), item.get('dimension', 'Tiêu chí'))} phù hợp"
-        for item in breakdown.get("strengths", [])
-    ]
+    reasons: list[str] = []
+    for item in breakdown.get("strengths", []):
+        if isinstance(item, str):
+            reasons.append(item)
+        elif isinstance(item, dict):
+            dimension = item.get("dimension", "Tiêu chí")
+            reasons.append(f"{DIMENSION_LABELS.get(dimension, dimension)} phù hợp")
     if not reasons:
         reasons = ["Điểm được tính từ dữ liệu hai bên đã đồng ý chia sẻ"]
     reasons.append("Điểm tương thích chỉ là ước lượng, không bảo đảm kết quả mối quan hệ")
@@ -561,7 +572,7 @@ def api_date_plan(request: DatePlanRequest) -> dict[str, Any]:
     times = ["17:30 - 18:45", "19:00 - 20:30", "20:45 - 21:45"]
     items = []
     for index, activity in enumerate(rows):
-        cost = activity["estimated_pair_cost"]
+        cost = activity["estimated_cost"]
         items.append(
             {
                 "step": index + 1,
@@ -569,8 +580,7 @@ def api_date_plan(request: DatePlanRequest) -> dict[str, Any]:
                 "title": activity["name"],
                 "location": activity["city"],
                 "description": (
-                    f"Chi phí ước tính {cost:,} VND cho hai người, "
-                    f"thời lượng khoảng {activity['duration_minutes']} phút. "
+                    f"Chi phí ước tính {cost:,} VND cho hai người. "
                     "Đây là đề xuất, hệ thống chưa đặt chỗ."
                 ),
                 "tag": "Trong nhà" if activity["indoor"] else "Ngoài trời",
