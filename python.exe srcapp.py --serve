@@ -1,0 +1,224 @@
+[33mcommit a3475a0ab4e4bb617b57fa3fab42a19c5a73c0c4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: hoangducanh2005 <anh.hd235640@sis.hust.edu.vn>
+Date:   Tue Jul 28 12:20:34 2026 +0700
+
+    Update full prj
+
+[33mcommit f9422421c4d649e2d49586f6a83d1cc7a36f9f89[m
+Merge: b857b93 7cb8bcc
+Author: hoangducanh2005 <anh.hd235640@sis.hust.edu.vn>
+Date:   Tue Jul 28 12:02:53 2026 +0700
+
+    Merge branch 'main' of https://github.com/QuocKhanhLuong/K3-Day03-Lab-Chatbot-vs-react-agent-E403
+    
+    # Conflicts:
+    #       src/tools/__init__.py
+
+[33mcommit b857b93c67c8a75b046ff780b6e8b1acdb5e8b7e[m
+Author: hoangducanh2005 <anh.hd235640@sis.hust.edu.vn>
+Date:   Tue Jul 28 11:59:37 2026 +0700
+
+    Update app.py
+
+[33mcommit 7cb8bccc15190e8ea2408ac0ade78cec503d5a85[m
+Merge: 0544c63 7ff243d
+Author: Huyen Nguyen <hng220055@gmail.com>
+Date:   Tue Jul 28 11:55:58 2026 +0700
+
+    Merge branch 'main' of https://github.com/QuocKhanhLuong/K3-Day03-Lab-Chatbot-vs-react-agent-E403
+
+[33mcommit 7ff243df09fb41d0616c668d7eebf90b691f3146[m
+Merge: 857ce75 1128589
+Author: Nguyễn Công Hùng <nguyenconghung1210@gmail.com>
+Date:   Tue Jul 28 11:54:56 2026 +0700
+
+    Merge pull request #6 from AtreidesAnh2005/feature/tools
+    
+    Feature/tools
+
+[33mcommit 0544c63e6e07970f8a1c4bf3ca0213451e3dbc2a[m
+Merge: d4b5046 857ce75
+Author: Huyen Nguyen <hng220055@gmail.com>
+Date:   Tue Jul 28 11:54:48 2026 +0700
+
+    Merge branch 'main' of https://github.com/QuocKhanhLuong/K3-Day03-Lab-Chatbot-vs-react-agent-E403
+
+[33mcommit d4b504610fed1cfa483b7dbd40f5030b0b365beb[m
+Author: Huyen Nguyen <hng220055@gmail.com>
+Date:   Tue Jul 28 11:54:22 2026 +0700
+
+    add frontend
+
+[33mcommit 112858918169388002cd3a64c09be3fff3b86ae0[m[33m ([m[1;31morigin/feature/tools[m[33m)[m
+Merge: f5a1302 857ce75
+Author: Nguyễn Công Hùng <nguyenconghung1210@gmail.com>
+Date:   Tue Jul 28 11:53:37 2026 +0700
+
+    Merge origin main into feature tools
+
+[33mcommit f5a130226ecef91a53a89c17a23a26b0e60aa04f[m
+Merge: 8769ec3 3258e35
+Author: Nguyễn Công Hùng <nguyenconghung1210@gmail.com>
+Date:   Tue Jul 28 11:44:02 2026 +0700
+
+    Merge branch 'main' into feature/tools
+
+[33mcommit 8769ec3e19e76e57355bc240244bad5763cd42a7[m
+Author: Nguyễn Công Hùng <nguyenconghung1210@gmail.com>
+Date:   Tue Jul 28 11:43:48 2026 +0700
+
+    Implement CupidMAS role 2 tools
+
+[33mcommit 857ce75d4121bdb65b11f514fd68c627e479bb28[m
+Merge: a4d3299 ee87853
+Author: Luong Quoc Khanh <khanhlq.hust.work@gmail.com>
+Date:   Tue Jul 28 11:41:39 2026 +0700
+
+    Merge pull request #5 from AtreidesAnh2005/role3-prompts
+    
+    Role 3: implement Cupid ReAct prompts and guardrails
+
+[33mcommit ee878533518f6675f22a61c46b8129d471fbdf03[m[33m ([m[1;31morigin/role3-prompts[m[33m)[m
+Author: QuocKhanhLuong <khanhlq.hust.work@gmail.com>
+Date:   Tue Jul 28 11:40:13 2026 +0700
+
+    Role 3: implement Cupid ReAct prompts and guardrails
+
+[33mcommit a4d3299227a98757ac4aff03f74ab5c01662a028[m
+Merge: 6e69681 9948733
+Author: myanhtrannguyen <myanh260305@gmail.com>
+Date:   Tue Jul 28 11:29:57 2026 +0700
+
+    Merge branch 'main' of https://github.com/QuocKhanhLuong/K3-Day03-Lab-Chatbot-vs-react-agent-E403
+
+[33mcommit 9948733c051d4978ece1423c1362c2fa2b60e3fa[m
+Author: hoangducanh2005 <anh.hd235640@sis.hust.edu.vn>
+Date:   Tue Jul 28 11:29:09 2026 +0700
+
+    Update projects folder architecture
+
+[33mcommit 3258e3564a094c9879ab1dd64acc2dfcc3cac3ed[m
+Merge: 5be8cbc 7eb98c4
+Author: AtreidesAnh2005 <hoangducanh2005@gmail.com>
+Date:   Tue Jul 28 11:27:53 2026 +0700
+
+    Merge pull request #4 from AtreidesAnh2005/feature/scoring-matrix
+    
+    Add scoring matrix evaluation report
+
+[33mcommit 6e69681c5b3db7b5c63dc87e285bfc6fc37f7260[m
+Author: myanhtrannguyen <myanh260305@gmail.com>
+Date:   Tue Jul 28 11:27:48 2026 +0700
+
+    add test cases
+
+[33mcommit 7eb98c47508709dc3fc8c3e7c238e4995fb6d09e[m[33m ([m[1;31morigin/feature/scoring-matrix[m[33m)[m
+Author: hoangkhoi1223 <hoangkhoi1223@gmail.com>
+Date:   Tue Jul 28 11:19:40 2026 +0700
+
+    Add scoring matrix evaluation report
+
+[33mcommit 5be8cbc759e892b83e0002e7bcf64d967ce19338[m
+Merge: 6745ab1 f1b3349
+Author: AtreidesAnh2005 <hoangducanh2005@gmail.com>
+Date:   Tue Jul 28 11:18:52 2026 +0700
+
+    Merge pull request #3 from AtreidesAnh2005/role3-prompts
+    
+    Add Workflow
+
+[33mcommit aeb9d8e3996951bdb2083408f20c81e96d12c860[m
+Author: Nguyễn Công Hùng <nguyenconghung1210@gmail.com>
+Date:   Tue Jul 28 11:06:15 2026 +0700
+
+    Implement Cupid Agent tool registry
+
+[33mcommit 6745ab1e45d501bd00738e255611e76496190b18[m
+Merge: e2bd544 8fa9808
+Author: AtreidesAnh2005 <hoangducanh2005@gmail.com>
+Date:   Tue Jul 28 11:00:53 2026 +0700
+
+    Merge pull request #2 from AtreidesAnh2005/product_architect
+    
+    add survey in problem scan
+
+[33mcommit 8fa980863e78437a288e63606251831bf6d3f345[m[33m ([m[1;31morigin/product_architect[m[33m)[m
+Author: myanhtrannguyen <myanh260305@gmail.com>
+Date:   Tue Jul 28 10:57:34 2026 +0700
+
+    add survey in problem scan
+
+[33mcommit f1b33493136faacf06172c446020a8034ac3ff04[m
+Author: QuocKhanhLuong <khanhlq.hust.work@gmail.com>
+Date:   Tue Jul 28 10:55:16 2026 +0700
+
+    Add Workflow
+
+[33mcommit e2bd544bda343f46cd141e8e9c573592b6d5176c[m
+Merge: 8c42188 868069d
+Author: Luong Quoc Khanh <khanhlq.hust.work@gmail.com>
+Date:   Tue Jul 28 10:36:15 2026 +0700
+
+    Merge pull request #1 from QuocKhanhLuong/product_architect
+    
+    problem_scan
+
+[33mcommit 868069d9259bb23558b9a5c719758fc6f2b16fb2[m
+Author: myanhtrannguyen <myanh260305@gmail.com>
+Date:   Tue Jul 28 10:25:45 2026 +0700
+
+    problem_scan
+
+[33mcommit 8c42188db6288a31685fdb3f74a62fd7fe34ae03[m
+Author: QuocKhanhLuong <khanhlq.hust.work@gmail.com>
+Date:   Tue Jul 28 10:24:25 2026 +0700
+
+    Add Ke_Hoach_Phan_Cong.md
+
+[33mcommit 88c58a685bdad35602ed6cc13899bfab7a4f1753[m
+Author: kag2002 <khanglt@vfastsoft.com>
+Date:   Tue Jul 28 00:39:00 2026 +0700
+
+    Clarify LLM_MODEL options and default models in .env.example
+
+[33mcommit 371d4d01dcbcc2760beeeeb1e7335203c29f9988[m
+Author: kag2002 <khanglt@vfastsoft.com>
+Date:   Tue Jul 28 00:37:21 2026 +0700
+
+    Add multi-provider adapter supporting Gemini, OpenAI, Anthropic, OpenRouter, and Mock
+
+[33mcommit 9cb27be57f6ff4911540ed56b1b2ea548d9199dd[m
+Author: kag2002 <khanglt@vfastsoft.com>
+Date:   Tue Jul 28 00:35:14 2026 +0700
+
+    Add python demo scripts for 4 levels of AI systems in src/ai_levels/
+
+[33mcommit 82c6803b1a6e5c01a1c610cc3426b92b0ac4ad90[m
+Author: kag2002 <khanglt@vfastsoft.com>
+Date:   Tue Jul 28 00:32:35 2026 +0700
+
+    Integrate 4 AI Levels spectrum into README and CODELAB guide
+
+[33mcommit 15b07bd43dded0c6f317f69af2911c880a6559fb[m
+Author: kag2002 <khanglt@vfastsoft.com>
+Date:   Tue Jul 28 00:17:46 2026 +0700
+
+    Add docs/CODELAB.md matching LMS Codelab format
+
+[33mcommit 28d373326e11a3ddce9e4e3e536db193499ec237[m
+Author: kag2002 <khanglt@vfastsoft.com>
+Date:   Mon Jul 27 22:52:19 2026 +0700
+
+    Update DANH_SACH_DE_TAI.md
+
+[33mcommit 4c1bc30f7cd6248f0a6679e15f7d49e6dac51fad[m
+Author: kag2002 <khanglt@vfastsoft.com>
+Date:   Mon Jul 27 22:51:36 2026 +0700
+
+    Add DANH_SACH_DE_TAI.md with 10 lab topics
+
+[33mcommit adab7879d0186c4489ae4d4d89662a3d314cae9a[m
+Author: kag2002 <khanglt@vfastsoft.com>
+Date:   Mon Jul 27 22:43:32 2026 +0700
+
+    Add Day-3 Lab Guide & Boilerplate Code for E402
