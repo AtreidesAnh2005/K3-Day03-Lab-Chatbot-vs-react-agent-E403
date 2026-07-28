@@ -85,6 +85,8 @@ export interface DatePlanResponse {
   preferredStartTime?: string | null;
   requestedEndTime?: string | null;
   requestedActivityCount?: number;
+  scheduleSource?: string | null;
+  llmProvider?: string | null;
   searchInterests?: string[];
   sharedInterests?: string[];
   requestId: string;

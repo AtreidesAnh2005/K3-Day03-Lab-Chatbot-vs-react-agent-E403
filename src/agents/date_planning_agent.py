@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import json
+import os
 import re
 from typing import Any
 
 from multi_agent.state import AgentState
 from multi_agent.tool_executor import call_tool
+from providers import get_llm_provider
 
 
 def _indoor_preference(text: str | None) -> bool | None:
@@ -150,6 +153,185 @@ def _date_items(
     return items
 
 
+def _provider_allows_live_call() -> bool:
+    return (os.getenv("LLM_PROVIDER") or "mock").strip().casefold() != "mock"
+
+
+def _json_from_llm_response(response: str) -> dict[str, Any] | None:
+    cleaned = response.strip()
+    if cleaned.startswith("```"):
+        cleaned = cleaned.strip("`").strip()
+        if cleaned.casefold().startswith("json"):
+            cleaned = cleaned[4:].strip()
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start < 0 or end < start:
+        return None
+    try:
+        data = json.loads(cleaned[start : end + 1])
+    except json.JSONDecodeError:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _minutes_from_hhmm(value: Any) -> int | None:
+    if not isinstance(value, str):
+        return None
+    match = re.fullmatch(r"\s*([01]\d|2[0-3]):([0-5]\d)\s*", value)
+    if not match:
+        return None
+    return int(match.group(1)) * 60 + int(match.group(2))
+
+
+def _llm_schedule_prompt(
+    state: AgentState,
+    *,
+    city: str | None,
+    budget: int,
+    prompt: str | None,
+    rows: list[dict[str, Any]],
+    fallback_items: list[dict[str, Any]],
+    start_minutes: int,
+    end_minutes: int | None,
+    requested_count: int,
+    search_interests: list[str],
+) -> str:
+    activities = [
+        {
+            "activity_id": row.get("activity_id"),
+            "name": row.get("name"),
+            "city": row.get("city"),
+            "interests": row.get("interests", []),
+            "estimated_cost": row.get("estimated_cost"),
+            "duration_minutes": row.get("duration_minutes"),
+            "indoor": row.get("indoor"),
+        }
+        for row in rows
+    ]
+    payload = {
+        "user_request": state.user_query,
+        "custom_prompt": prompt,
+        "city": city,
+        "max_budget_vnd": budget,
+        "requested_start_time": _format_minutes(start_minutes),
+        "requested_end_time": _format_minutes(end_minutes) if end_minutes is not None else None,
+        "requested_activity_count": requested_count,
+        "search_interests": search_interests,
+        "candidate_activities": activities,
+        "fallback_schedule": fallback_items,
+    }
+    return (
+        "You are the Date Planning Agent scheduler for a consent-aware dating app.\n"
+        "Create a flexible schedule that follows the user's requested timing and activity preferences.\n"
+        "Hard rules:\n"
+        "- Use only activity_id values from candidate_activities.\n"
+        "- Do not invent venues, prices, private data, bookings, contacts, or payments.\n"
+        "- Keep every selected activity within max_budget_vnd evidence already provided.\n"
+        "- If requested_end_time is present, choose activities that fit before it when possible.\n"
+        "- Return JSON only, no markdown.\n"
+        "Schema:\n"
+        "{\n"
+        '  "items": [{"activity_id": "A02", "start_time": "18:00"}],\n'
+        '  "appliedChanges": ["short note"],\n'
+        '  "rationale": "one short sentence"\n'
+        "}\n\n"
+        f"Context JSON:\n{json.dumps(payload, ensure_ascii=False)}"
+    )
+
+
+def _refine_items_with_llm(
+    state: AgentState,
+    *,
+    city: str | None,
+    budget: int,
+    prompt: str | None,
+    rows: list[dict[str, Any]],
+    fallback_items: list[dict[str, Any]],
+    verified_cost: dict[str, Any] | None,
+    start_minutes: int,
+    end_minutes: int | None,
+    requested_count: int,
+    search_interests: list[str],
+) -> tuple[list[dict[str, Any]], list[str], str]:
+    if not _provider_allows_live_call() or not rows or not fallback_items:
+        return fallback_items, [], "deterministic"
+
+    provider = get_llm_provider()
+    provider_name = provider.__class__.__name__
+    schedule_prompt = _llm_schedule_prompt(
+        state,
+        city=city,
+        budget=budget,
+        prompt=prompt,
+        rows=rows,
+        fallback_items=fallback_items,
+        start_minutes=start_minutes,
+        end_minutes=end_minutes,
+        requested_count=requested_count,
+        search_interests=search_interests,
+    )
+    system_prompt = (
+        "Return valid JSON only. Use only supplied activity_id values. "
+        "Never claim a booking, reservation, payment, contact, or guaranteed outcome."
+    )
+    response = provider.generate(schedule_prompt, system_prompt=system_prompt)
+    if response.startswith("[") and ("Error" in response or "Exception" in response):
+        state.record("date_planning", "llm_schedule_failed", {"provider": provider_name, "message": response[:160]})
+        return fallback_items, [f"LLM scheduler unavailable; used deterministic fallback ({provider_name})"], "fallback"
+
+    parsed = _json_from_llm_response(response)
+    if not parsed:
+        state.record("date_planning", "llm_schedule_invalid_json", {"provider": provider_name})
+        return fallback_items, [f"LLM scheduler returned invalid JSON; used deterministic fallback ({provider_name})"], "fallback"
+
+    rows_by_id = {str(row.get("activity_id")): row for row in rows}
+    selected_rows: list[dict[str, Any]] = []
+    selected_starts: list[int] = []
+    for raw_item in parsed.get("items", []):
+        if not isinstance(raw_item, dict):
+            continue
+        activity_id = str(raw_item.get("activity_id") or "")
+        start = _minutes_from_hhmm(raw_item.get("start_time"))
+        row = rows_by_id.get(activity_id)
+        if row is None or start is None:
+            continue
+        selected_rows.append(row)
+        selected_starts.append(start)
+        if len(selected_rows) >= requested_count:
+            break
+
+    if not selected_rows:
+        state.record("date_planning", "llm_schedule_no_valid_items", {"provider": provider_name})
+        return fallback_items, [f"LLM scheduler selected no valid activities; used deterministic fallback ({provider_name})"], "fallback"
+
+    refined: list[dict[str, Any]] = []
+    for row, item_start in zip(selected_rows, selected_starts):
+        refined.extend(
+            _date_items(
+                [row],
+                verified_cost if not refined else None,
+                item_start,
+                end_minutes,
+                1,
+            )
+        )
+    if not refined:
+        return fallback_items, [f"LLM scheduler did not fit the time window; used deterministic fallback ({provider_name})"], "fallback"
+
+    notes = [
+        str(item)
+        for item in parsed.get("appliedChanges", [])
+        if isinstance(item, str) and item.strip()
+    ]
+    notes.append(f"Refined by {provider_name} from .env")
+    state.record(
+        "date_planning",
+        "llm_schedule_refined",
+        {"provider": provider_name, "item_count": len(refined)},
+    )
+    return refined, notes, "llm"
+
+
 def run_date_planning_agent(state: AgentState) -> AgentState:
     agent = "date_planning"
     state.record(agent, "started", {"stage": "plan_date"})
@@ -240,11 +422,24 @@ def run_date_planning_agent(state: AgentState) -> AgentState:
         topics = ["một ngày lý tưởng", "sở thích cuối tuần", "ẩm thực"]
     preferred_start = _schedule_start_minutes(prompt)
     end_minutes = _requested_end_minutes(prompt)
-    items = _date_items(rows, verified_cost, preferred_start, end_minutes, requested_count)
-    if not items and rows and end_minutes is not None:
+    fallback_items = _date_items(rows, verified_cost, preferred_start, end_minutes, requested_count)
+    if not fallback_items and rows and end_minutes is not None:
         first_duration = int(rows[0].get("duration_minutes") or 90)
         preferred_start = max(0, end_minutes - first_duration)
-        items = _date_items(rows, verified_cost, preferred_start, end_minutes, requested_count)
+        fallback_items = _date_items(rows, verified_cost, preferred_start, end_minutes, requested_count)
+    items, llm_notes, schedule_source = _refine_items_with_llm(
+        state,
+        city=city,
+        budget=budget,
+        prompt=prompt,
+        rows=rows,
+        fallback_items=fallback_items,
+        verified_cost=verified_cost,
+        start_minutes=preferred_start,
+        end_minutes=end_minutes,
+        requested_count=requested_count,
+        search_interests=search_interests,
+    )
     state.plan = {
         "candidateName": state.target_profile.get("display_name") or state.candidate_id,
         "theme": f"Kế hoạch hẹn hò an toàn tại {city or 'địa điểm đã chọn'}",
@@ -256,12 +451,17 @@ def run_date_planning_agent(state: AgentState) -> AgentState:
         "preferredStartTime": _format_minutes(preferred_start) if preferred_start is not None else None,
         "requestedEndTime": _format_minutes(end_minutes) if end_minutes is not None else None,
         "requestedActivityCount": requested_count,
-        "appliedChanges": _schedule_notes(
-            prompt,
-            activity_count=requested_count,
-            start_minutes=preferred_start,
-            end_minutes=end_minutes,
-        ),
+        "appliedChanges": [
+            *_schedule_notes(
+                prompt,
+                activity_count=requested_count,
+                start_minutes=preferred_start,
+                end_minutes=end_minutes,
+            ),
+            *llm_notes,
+        ],
+        "scheduleSource": schedule_source,
+        "llmProvider": get_llm_provider().__class__.__name__ if schedule_source == "llm" else None,
         "searchInterests": search_interests,
         "sharedInterests": shared_interests,
     }

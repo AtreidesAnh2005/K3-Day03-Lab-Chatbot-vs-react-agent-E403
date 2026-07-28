@@ -130,6 +130,11 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
                   <Sparkles className="h-3.5 w-3.5" /> Dieu chinh cua agent
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
+                  {datePlan.scheduleSource ? (
+                    <span className="rounded-full border border-primary/20 bg-background px-2.5 py-1 text-[11px] font-medium text-foreground/80">
+                      Source: {datePlan.llmProvider || datePlan.scheduleSource}
+                    </span>
+                  ) : null}
                   {datePlan.appliedChanges.map((change) => (
                     <span
                       key={change}

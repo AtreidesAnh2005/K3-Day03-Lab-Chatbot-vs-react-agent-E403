@@ -58,6 +58,8 @@ def _date_output(state: AgentState) -> dict:
         "preferredStartTime": state.plan.get("preferredStartTime"),
         "requestedEndTime": state.plan.get("requestedEndTime"),
         "requestedActivityCount": state.plan.get("requestedActivityCount"),
+        "scheduleSource": state.plan.get("scheduleSource"),
+        "llmProvider": state.plan.get("llmProvider"),
         "searchInterests": state.plan.get("searchInterests", []),
         "sharedInterests": state.plan.get("sharedInterests", []),
     }
