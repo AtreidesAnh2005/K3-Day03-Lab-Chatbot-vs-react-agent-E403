@@ -1,0 +1,215 @@
+[
+  {
+    "user_id": "USR001",
+    "display_name": "Minh",
+    "age": 26,
+    "city": "Ha Noi",
+    "matching_enabled": true,
+    "consent_to_matching": true,
+    "relationship_goal": "serious",
+    "interests": ["reading", "coffee", "travel", "cooking"],
+    "values": ["family", "personal_growth", "kindness"],
+    "lifestyle": {
+      "smoking": false,
+      "drinking": "occasionally",
+      "exercise": "regularly"
+    },
+    "communication_style": "direct",
+    "future_plans": {
+      "preferred_city": "Ha Noi",
+      "wants_children": "unsure"
+    },
+    "availability": ["saturday_evening", "sunday_afternoon"],
+    "verified_fields": ["age", "city", "relationship_goal", "interests", "values"],
+    "blocked_user_ids": []
+  },
+  {
+    "user_id": "USR002",
+    "display_name": "Lan",
+    "age": 25,
+    "city": "Ha Noi",
+    "matching_enabled": true,
+    "consent_to_matching": true,
+    "relationship_goal": "serious",
+    "interests": ["reading", "coffee", "travel", "music"],
+    "values": ["family", "personal_growth", "kindness"],
+    "lifestyle": {
+      "smoking": false,
+      "drinking": "occasionally",
+      "exercise": "regularly"
+    },
+    "communication_style": "direct",
+    "future_plans": {
+      "preferred_city": "Ha Noi",
+      "wants_children": "unsure"
+    },
+    "availability": ["saturday_evening", "sunday_afternoon"],
+    "verified_fields": ["age", "city", "relationship_goal", "interests", "values"],
+    "blocked_user_ids": []
+  },
+  {
+    "user_id": "USR003",
+    "display_name": "An",
+    "age": 27,
+    "city": "Ha Noi",
+    "matching_enabled": true,
+    "consent_to_matching": true,
+    "relationship_goal": "casual",
+    "interests": ["reading", "coffee", "travel"],
+    "values": ["independence", "adventure"],
+    "lifestyle": {
+      "smoking": false,
+      "drinking": "occasionally",
+      "exercise": "sometimes"
+    },
+    "communication_style": "direct",
+    "future_plans": {
+      "preferred_city": "Ha Noi",
+      "wants_children": "no"
+    },
+    "availability": ["friday_evening"],
+    "verified_fields": ["age", "city", "relationship_goal", "interests"],
+    "blocked_user_ids": []
+  },
+  {
+    "user_id": "USR004",
+    "display_name": "Hoa",
+    "age": 24,
+    "city": "Ha Noi",
+    "matching_enabled": true,
+    "consent_to_matching": true,
+    "relationship_goal": "serious",
+    "interests": ["cooking", "coffee", "cinema"],
+    "values": ["family", "stability"],
+    "lifestyle": {
+      "smoking": true,
+      "drinking": "occasionally",
+      "exercise": "regularly"
+    },
+    "communication_style": "gentle",
+    "future_plans": {
+      "preferred_city": "Ha Noi",
+      "wants_children": "unsure"
+    },
+    "availability": ["sunday_afternoon"],
+    "verified_fields": ["age", "city", "relationship_goal", "lifestyle"],
+    "blocked_user_ids": []
+  },
+  {
+    "user_id": "USR005",
+    "display_name": "Khanh",
+    "age": 28,
+    "city": "Ha Noi",
+    "matching_enabled": true,
+    "consent_to_matching": true,
+    "relationship_goal": "serious",
+    "interests": [],
+    "values": [],
+    "lifestyle": {
+      "smoking": false,
+      "drinking": "unknown",
+      "exercise": "unknown"
+    },
+    "communication_style": "",
+    "future_plans": {},
+    "availability": [],
+    "verified_fields": ["age", "city", "relationship_goal"],
+    "blocked_user_ids": []
+  },
+  {
+    "user_id": "USR006",
+    "display_name": "Vy",
+    "age": 29,
+    "city": "Ha Noi",
+    "matching_enabled": false,
+    "consent_to_matching": true,
+    "relationship_goal": "serious",
+    "interests": ["reading", "coffee"],
+    "values": ["family", "kindness"],
+    "lifestyle": {
+      "smoking": false,
+      "drinking": "rarely",
+      "exercise": "regularly"
+    },
+    "communication_style": "direct",
+    "future_plans": {
+      "preferred_city": "Ha Noi",
+      "wants_children": "unsure"
+    },
+    "availability": ["saturday_evening"],
+    "verified_fields": ["age", "city", "relationship_goal"],
+    "blocked_user_ids": []
+  },
+  {
+    "user_id": "USR007",
+    "display_name": "Nam",
+    "age": 30,
+    "city": "Ha Noi",
+    "matching_enabled": true,
+    "consent_to_matching": false,
+    "relationship_goal": "serious",
+    "interests": ["travel", "music"],
+    "values": ["family", "personal_growth"],
+    "lifestyle": {
+      "smoking": false,
+      "drinking": "occasionally",
+      "exercise": "regularly"
+    },
+    "communication_style": "direct",
+    "future_plans": {
+      "preferred_city": "Ha Noi",
+      "wants_children": "yes"
+    },
+    "availability": ["sunday_afternoon"],
+    "verified_fields": ["age", "city", "relationship_goal"],
+    "blocked_user_ids": []
+  },
+  {
+    "user_id": "USR008",
+    "display_name": "Mai",
+    "age": 23,
+    "city": "Ha Noi",
+    "matching_enabled": true,
+    "consent_to_matching": true,
+    "relationship_goal": "serious",
+    "interests": ["reading", "cooking"],
+    "values": ["family", "kindness"],
+    "lifestyle": {
+      "smoking": false,
+      "drinking": "rarely",
+      "exercise": "regularly"
+    },
+    "communication_style": "direct",
+    "future_plans": {
+      "preferred_city": "Ha Noi",
+      "wants_children": "unsure"
+    },
+    "availability": ["saturday_evening"],
+    "verified_fields": ["age", "city", "relationship_goal"],
+    "blocked_user_ids": ["USR001"]
+  },
+  {
+    "user_id": "USR009",
+    "display_name": "Quang",
+    "age": 31,
+    "city": "Ho Chi Minh City",
+    "matching_enabled": true,
+    "consent_to_matching": true,
+    "relationship_goal": "serious",
+    "interests": ["hiking", "photography", "music"],
+    "values": ["personal_growth", "independence"],
+    "lifestyle": {
+      "smoking": false,
+      "drinking": "rarely",
+      "exercise": "regularly"
+    },
+    "communication_style": "reflective",
+    "future_plans": {
+      "preferred_city": "Ho Chi Minh City",
+      "wants_children": "yes"
+    },
+    "availability": ["weekday_evening"],
+    "verified_fields": ["age", "city", "relationship_goal", "values"],
+    "blocked_user_ids": []
+  }
+]
