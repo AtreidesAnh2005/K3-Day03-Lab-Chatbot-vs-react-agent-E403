@@ -1,0 +1,12 @@
+[
+  {"user_id": "USR001", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "clear", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR002", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "clear", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR003", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "clear", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR004", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "clear", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR005", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "clear", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR006", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "clear", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR007", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "clear", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR008", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "clear", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR009", "age_verified": true, "account_verified": true, "account_status": "active", "safety_status": "warning", "confirmed_report_count": 0, "requires_human_review": false},
+  {"user_id": "USR010", "age_verified": true, "account_verified": false, "account_status": "active", "safety_status": "review_required", "confirmed_report_count": 2, "requires_human_review": true}
+]

@@ -1,0 +1,104 @@
+[
+  {
+    "user_id": "USR001",
+    "profile_version": 1,
+    "last_confirmed_at": "2026-07-01",
+    "preferences": [
+      {"field": "age_range", "value": {"min": 22, "max": 35}, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "relationship_goal", "value": "serious", "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "values", "value": ["family", "personal_growth", "kindness"], "priority": "preferred", "confidence": "high", "source": "user_confirmed"},
+      {"field": "lifestyle.smoking", "value": false, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "communication_style", "value": "direct", "priority": "preferred", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "future_plans.relocation", "value": "possible", "priority": "negotiable", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "interests", "value": ["coffee", "reading", "art"], "priority": "preferred", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "availability", "value": ["saturday_evening", "sunday_afternoon"], "priority": "negotiable", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "city", "value": "Ha Noi", "priority": "preferred", "confidence": "high", "source": "user_confirmed"},
+      {"field": "dealbreakers", "value": [{"field": "lifestyle.smoking", "disallowed_value": true}], "priority": "required", "confidence": "high", "source": "user_confirmed"}
+    ]
+  },
+  {
+    "user_id": "USR002",
+    "profile_version": 1,
+    "last_confirmed_at": "2026-07-02",
+    "preferences": [
+      {"field": "age_range", "value": {"min": 24, "max": 32}, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "relationship_goal", "value": "serious", "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "values", "value": ["family", "personal_growth"], "priority": "preferred", "confidence": "high", "source": "user_confirmed"},
+      {"field": "lifestyle.smoking", "value": false, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "communication_style", "value": "direct", "priority": "preferred", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "future_plans.relocation", "value": "possible", "priority": "negotiable", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "interests", "value": ["coffee", "reading", "art"], "priority": "preferred", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "availability", "value": ["saturday_evening"], "priority": "negotiable", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "city", "value": "Ha Noi", "priority": "preferred", "confidence": "high", "source": "user_confirmed"},
+      {"field": "dealbreakers", "value": [{"field": "lifestyle.smoking", "disallowed_value": true}], "priority": "required", "confidence": "high", "source": "user_confirmed"}
+    ]
+  },
+  {
+    "user_id": "USR003",
+    "profile_version": 1,
+    "last_confirmed_at": "2026-07-03",
+    "preferences": [
+      {"field": "age_range", "value": {"min": 22, "max": 35}, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "relationship_goal", "value": "casual", "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "interests", "value": ["coffee", "travel"], "priority": "preferred", "confidence": "medium", "source": "user_confirmed"}
+    ]
+  },
+  {
+    "user_id": "USR004",
+    "profile_version": 1,
+    "last_confirmed_at": "2026-07-04",
+    "preferences": [
+      {"field": "age_range", "value": {"min": 22, "max": 35}, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "relationship_goal", "value": "serious", "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "lifestyle.smoking", "value": true, "priority": "negotiable", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "interests", "value": ["art", "cooking"], "priority": "preferred", "confidence": "medium", "source": "user_confirmed"}
+    ]
+  },
+  {
+    "user_id": "USR005",
+    "profile_version": 1,
+    "last_confirmed_at": "2026-07-05",
+    "preferences": [
+      {"field": "age_range", "value": {"min": 24, "max": 35}, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "relationship_goal", "value": "serious", "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "lifestyle.smoking", "value": false, "priority": "required", "confidence": "high", "source": "user_confirmed"}
+    ]
+  },
+  {
+    "user_id": "USR008",
+    "profile_version": 1,
+    "last_confirmed_at": "2026-07-08",
+    "preferences": [
+      {"field": "age_range", "value": {"min": 22, "max": 35}, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "relationship_goal", "value": "serious", "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "lifestyle.smoking", "value": false, "priority": "required", "confidence": "high", "source": "user_confirmed"}
+    ]
+  },
+  {
+    "user_id": "USR009",
+    "profile_version": 1,
+    "last_confirmed_at": "2026-07-09",
+    "preferences": [
+      {"field": "age_range", "value": {"min": 24, "max": 35}, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "relationship_goal", "value": "serious", "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "values", "value": ["personal_growth", "independence"], "priority": "preferred", "confidence": "high", "source": "user_confirmed"},
+      {"field": "lifestyle.smoking", "value": false, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "communication_style", "value": "reflective", "priority": "preferred", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "future_plans.relocation", "value": "possible", "priority": "negotiable", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "interests", "value": ["hiking", "photography"], "priority": "preferred", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "availability", "value": ["weekday_evening"], "priority": "negotiable", "confidence": "medium", "source": "user_confirmed"},
+      {"field": "city", "value": "Ho Chi Minh City", "priority": "preferred", "confidence": "high", "source": "user_confirmed"}
+    ]
+  },
+  {
+    "user_id": "USR010",
+    "profile_version": 1,
+    "last_confirmed_at": "2026-07-10",
+    "preferences": [
+      {"field": "age_range", "value": {"min": 24, "max": 35}, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "relationship_goal", "value": "serious", "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "lifestyle.smoking", "value": false, "priority": "required", "confidence": "high", "source": "user_confirmed"},
+      {"field": "interests", "value": ["coffee", "art"], "priority": "preferred", "confidence": "medium", "source": "user_confirmed"}
+    ]
+  }
+]
