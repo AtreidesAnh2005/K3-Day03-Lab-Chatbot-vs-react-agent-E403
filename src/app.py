@@ -8,13 +8,12 @@ Run the frontend API:
 """
 
 from __future__ import annotations
-
+# 
 import argparse
 import json
 import os
 import re
 import sys
-import unicodedata
 from dataclasses import dataclass
 from typing import Any
 
@@ -41,8 +40,6 @@ try:
         REACT_SYSTEM_PROMPT,
         SAFE_FALLBACK_MESSAGE,
     )
-    from .multi_agent.builder import run_multi_agent_workflow
-    from .observability.langfuse_config import build_trace_summary
     from .providers import get_llm_provider
     from .tools import AVAILABLE_TOOLS
 except ImportError:
@@ -53,8 +50,6 @@ except ImportError:
         REACT_SYSTEM_PROMPT,
         SAFE_FALLBACK_MESSAGE,
     )
-    from multi_agent.builder import run_multi_agent_workflow  # type: ignore[no-redef]
-    from observability.langfuse_config import build_trace_summary  # type: ignore[no-redef]
     from providers import get_llm_provider  # type: ignore[no-redef]
     from tools import AVAILABLE_TOOLS  # type: ignore[no-redef]
 
@@ -63,7 +58,18 @@ load_dotenv()
 DEFAULT_REQUESTER_ID = os.getenv("CUPID_DEMO_USER_ID", "USR001")
 TOOL_FAILURE_STATUSES = {"denied", "error"}
 PROFILE_STORE: dict[str, dict[str, Any]] = {}
-AGENT_RUNS: dict[str, dict[str, Any]] = {}
+
+DIMENSION_LABELS = {
+    "relationship_goal": "Mục tiêu mối quan hệ",
+    "values": "Giá trị sống",
+    "lifestyle": "Lối sống",
+    "communication_style": "Phong cách giao tiếp",
+    "future_plans": "Kế hoạch tương lai",
+    "interests": "Sở thích",
+    "availability": "Lịch rảnh",
+    "logistics": "Khoảng cách và địa điểm",
+}
+
 
 @dataclass
 class ParsedReactResponse:
@@ -208,117 +214,21 @@ def parse_react_output(response: str) -> ParsedReactResponse:
 def _normalize_user_id(value: Any) -> Any:
     if not isinstance(value, str):
         return value
-    return value.strip()
+    match = re.fullmatch(r"U(\d{3})", value.strip(), flags=re.IGNORECASE)
+    return f"USR{match.group(1)}" if match else value
 
 
 def _normalize_city(value: Any) -> Any:
     if not isinstance(value, str):
         return value
     aliases = {
-        "hanoi": "Hanoi",
-        "ha noi": "Hanoi",
-        "hà nội": "Hanoi",
+        "hanoi": "Ha Noi",
+        "hà nội": "Ha Noi",
         "ho chi minh": "Ho Chi Minh City",
-        "ho chi minh city": "Ho Chi Minh City",
         "tp.hcm": "Ho Chi Minh City",
         "hồ chí minh": "Ho Chi Minh City",
     }
-    return aliases.get(value.strip().casefold(), value.strip())
-
-
-def _fold_text(value: str) -> str:
-    normalized = unicodedata.normalize("NFD", value.casefold())
-    return "".join(
-        character
-        for character in normalized
-        if unicodedata.category(character) != "Mn"
-    )
-
-
-def _is_date_planning_chat(message: str) -> bool:
-    text = _fold_text(message)
-    direct_markers = {
-        "date plan",
-        "date planning",
-        "lap ke hoach hen",
-        "ke hoach hen",
-        "lich trinh hen",
-        "goi y buoi hen",
-        "buoi hen",
-        "hen ho",
-        "itinerary",
-    }
-    context_markers = {
-        "ngoai troi",
-        "trong nha",
-        "cuoi tuan",
-        "toi nay",
-        "ngan sach",
-        "budget",
-        "dia diem",
-        "cafe",
-        "ca phe",
-        "an toi",
-        "workshop",
-        "trien lam",
-        "bao tang",
-    }
-    return any(marker in text for marker in direct_markers) or (
-        "hen" in text and any(marker in text for marker in context_markers)
-    )
-
-
-def _extract_chat_city(message: str) -> str | None:
-    text = _fold_text(message)
-    if "ha noi" in text or "hanoi" in text:
-        return "Hanoi"
-    if any(marker in text for marker in {"ho chi minh", "tp hcm", "tphcm", "sai gon", "saigon"}):
-        return "Ho Chi Minh City"
-    if "da nang" in text:
-        return "Da Nang"
-    return None
-
-
-def _extract_chat_budget(message: str) -> int | None:
-    text = _fold_text(message).replace("đ", "d")
-    million_match = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:trieu|tr|m)\b", text)
-    if million_match:
-        return int(float(million_match.group(1).replace(",", ".")) * 1_000_000)
-
-    thousand_match = re.search(r"(\d+(?:[.,]\d+)?)\s*(?:k|nghin|ngan)\b", text)
-    if thousand_match:
-        return int(float(thousand_match.group(1).replace(",", ".")) * 1_000)
-
-    amount_match = re.search(r"\b(\d{1,3}(?:[.,]\d{3})+|\d{5,})\s*(?:vnd|dong|d)?\b", text)
-    if amount_match:
-        return int(re.sub(r"[.,]", "", amount_match.group(1)))
-    return None
-
-
-def _format_date_plan_chat_reply(output: dict[str, Any]) -> str:
-    items = output.get("items") or []
-    questions = output.get("icebreakerQuestions") or []
-    if not items:
-        return (
-            "Date Planning Agent chưa tìm được lịch trình đủ dữ liệu đã consent. "
-            "Bạn có thể thử lại với ngân sách, thành phố hoặc kiểu không gian cụ thể hơn."
-        )
-
-    lines = [
-        f"Date Planning Agent đề xuất: {output.get('theme') or 'kế hoạch hẹn hò an toàn'}",
-        "",
-    ]
-    for item in items:
-        lines.append(
-            (
-                f"{item.get('step')}. {item.get('time')} - {item.get('title')} "
-                f"({item.get('location')}): {item.get('description')}"
-            )
-        )
-    if questions:
-        lines.extend(["", "Câu hỏi phá băng:"])
-        lines.extend(f"- {question}" for question in questions)
-    return "\n".join(lines)
+    return aliases.get(value.strip().casefold(), value)
 
 
 def _normalize_tool_arguments(
@@ -405,20 +315,14 @@ def render_observation(observation: dict[str, Any]) -> str:
     return json.dumps(observation, ensure_ascii=False, indent=2)
 
 
-def _finalize_safe_fallback(*, safety_verdict: str | None = None) -> str:
-    print(f"Final Answer: {SAFE_FALLBACK_MESSAGE}")
-    if safety_verdict:
-        print(f"Safety Verdict: {safety_verdict}")
-    return SAFE_FALLBACK_MESSAGE
-
-
 def run_react_agent(user_query: str, provider: Any) -> str:
     """Run a guarded Thought -> Action -> Observation -> Final Answer loop."""
     print(f"\n[REACT AGENT] Câu hỏi: {user_query}")
 
     if is_safety_blocked(user_query):
         print("GUARDRAIL: blocked before tool use.")
-        return _finalize_safe_fallback(safety_verdict="BLOCK")
+        print(f"Final Answer: {SAFE_FALLBACK_MESSAGE}")
+        return SAFE_FALLBACK_MESSAGE
 
     conversation = f"User request: {user_query}"
     action_history: dict[str, int] = {}
@@ -431,12 +335,11 @@ def run_react_agent(user_query: str, provider: Any) -> str:
         parsed = parse_react_output(response)
         if parsed.parser_error:
             print(f"Parser Error: {parsed.parser_error}")
-            return _finalize_safe_fallback()
+            return SAFE_FALLBACK_MESSAGE
         if parsed.final_answer:
             return parsed.final_answer
         if not parsed.action_name or parsed.action_args is None:
-            print("GUARDRAIL: response did not contain a valid action.")
-            return _finalize_safe_fallback()
+            return SAFE_FALLBACK_MESSAGE
 
         normalized_args = _normalize_tool_arguments(parsed.action_name, parsed.action_args)
         action_key = json.dumps(
@@ -447,7 +350,7 @@ def run_react_agent(user_query: str, provider: Any) -> str:
         action_history[action_key] = action_history.get(action_key, 0) + 1
         if action_history[action_key] > MAX_REPEATED_ACTIONS:
             print("GUARDRAIL: repeated action detected.")
-            return _finalize_safe_fallback()
+            return SAFE_FALLBACK_MESSAGE
 
         observation = execute_tool(parsed.action_name, parsed.action_args)
         observation_text = render_observation(observation)
@@ -455,7 +358,7 @@ def run_react_agent(user_query: str, provider: Any) -> str:
 
         if not observation.get("ok"):
             print("GUARDRAIL: tool denied or failed.")
-            return _finalize_safe_fallback()
+            return SAFE_FALLBACK_MESSAGE
 
         conversation = (
             f"{conversation}\n\n"
@@ -465,7 +368,7 @@ def run_react_agent(user_query: str, provider: Any) -> str:
         )
 
     print(f"GUARDRAIL: max iterations reached ({MAX_ITERATIONS}).")
-    return _finalize_safe_fallback()
+    return SAFE_FALLBACK_MESSAGE
 
 
 def should_use_react(test_case: dict[str, Any]) -> bool:
@@ -477,6 +380,92 @@ def should_use_react(test_case: dict[str, Any]) -> bool:
     }
 
 
+def _tool_data(tool_name: str, arguments: dict[str, Any]) -> Any:
+    observation = execute_tool(tool_name, arguments)
+    if not observation.get("ok"):
+        status_code = 403 if observation.get("error_type") in {
+            "CONSENT_NOT_FOUND",
+            "CONSENT_REVOKED",
+            "PERMISSION_DENIED",
+            "PROFILE_ACCESS_DENIED",
+        } else 400
+        raise HTTPException(
+            status_code=status_code,
+            detail={
+                "tool": tool_name,
+                "code": observation.get("error_type", "TOOL_ERROR"),
+                "message": observation.get("message", "Tool execution failed."),
+            },
+        )
+    output = observation.get("output")
+    if not isinstance(output, dict) or "data" not in output:
+        raise HTTPException(status_code=500, detail=f"{tool_name} returned an invalid envelope.")
+    return output["data"]
+
+
+def _candidate_personality(profile: dict[str, Any]) -> str:
+    interests = set(profile.get("interests") or [])
+    communication = profile.get("communication_style")
+    if interests & {"art", "music", "cinema", "photography"}:
+        return "creative"
+    if interests & {"travel", "cycling", "walking"}:
+        return "adventurous"
+    if communication == "direct":
+        return "analytical"
+    if communication == "gentle":
+        return "introvert"
+    return "ambivert"
+
+
+def _candidate_api_model(candidate_id: str) -> dict[str, Any] | None:
+    score = _tool_data(
+        "calculate_compatibility",
+        {"user_id": DEFAULT_REQUESTER_ID, "candidate_id": candidate_id},
+    )
+    if not score.get("eligible") or not score.get("score_available"):
+        return None
+
+    profile_data = _tool_data(
+        "get_match_profile",
+        {"user_id": candidate_id, "requester_id": DEFAULT_REQUESTER_ID},
+    )
+    breakdown = _tool_data(
+        "get_compatibility_breakdown",
+        {"user_id": DEFAULT_REQUESTER_ID, "candidate_id": candidate_id},
+    )
+    profile = profile_data["profile"]
+
+    reasons = [
+        f"{DIMENSION_LABELS.get(item.get('dimension'), item.get('dimension', 'Tiêu chí'))} phù hợp"
+        for item in breakdown.get("strengths", [])
+    ]
+    if not reasons:
+        reasons = ["Điểm được tính từ dữ liệu hai bên đã đồng ý chia sẻ"]
+    reasons.append("Điểm tương thích chỉ là ước lượng, không bảo đảm kết quả mối quan hệ")
+
+    display_name = profile.get("display_name") or candidate_id
+    city = profile.get("city") or "Chưa chia sẻ"
+    goal = profile.get("relationship_goal")
+    bio = f"{display_name} sống tại {city}."
+    if goal:
+        bio += f" Mục tiêu mối quan hệ đã chia sẻ: {goal}."
+
+    return {
+        "id": candidate_id,
+        "name": display_name,
+        "age": profile.get("age") or 18,
+        "city": city,
+        "careerField": "",
+        "loveLanguage": "",
+        "personality": _candidate_personality(profile),
+        "photo": "",
+        "bio": bio,
+        "interests": profile.get("interests") or [],
+        "compatibility": score["score"],
+        "reasons": reasons[:3],
+    }
+
+
 @app.get("/api/health")
 def api_health() -> dict[str, Any]:
     return {
@@ -484,7 +473,6 @@ def api_health() -> dict[str, Any]:
         "provider": get_llm_provider().__class__.__name__,
         "toolCount": len(AVAILABLE_TOOLS),
         "demoUserId": DEFAULT_REQUESTER_ID,
-        "multiAgent": True,
     }
 
 
@@ -493,142 +481,134 @@ def api_tools() -> dict[str, Any]:
     return {"tools": sorted(AVAILABLE_TOOLS), "count": len(AVAILABLE_TOOLS)}
 
 
-def _run_api_workflow(**kwargs: Any) -> Any:
-    state = run_multi_agent_workflow(user_id=DEFAULT_REQUESTER_ID, **kwargs)
-    AGENT_RUNS[state.request_id] = build_trace_summary(state.to_dict())
-    while len(AGENT_RUNS) > 20:
-        AGENT_RUNS.pop(next(iter(AGENT_RUNS)))
-    return state
-
-
-def _raise_workflow_error(state: Any) -> None:
-    if not state.errors:
-        return
-    error = state.errors[0]
-    denied_codes = {
-        "CONSENT_NOT_FOUND",
-        "CONSENT_REVOKED",
-        "PERMISSION_DENIED",
-        "PROFILE_ACCESS_DENIED",
-    }
-    status_code = 403 if error.get("code") in denied_codes else 400
-    raise HTTPException(
-        status_code=status_code,
-        detail={
-            "code": error.get("code", "WORKFLOW_ERROR"),
-            "message": error.get("message", "Workflow failed."),
-            "requestId": state.request_id,
-        },
-    )
-
-
-@app.get("/api/agent/traces")
-def api_agent_traces() -> dict[str, Any]:
-    return {"runs": list(AGENT_RUNS.values()), "count": len(AGENT_RUNS)}
-
-
 @app.post("/api/profile")
 def api_submit_profile(profile: ProfileRequest) -> dict[str, Any]:
     PROFILE_STORE[profile.email.casefold()] = profile.model_dump()
-    state = _run_api_workflow(
-        user_query="Validate the submitted matching profile.",
-        intent="profile",
-        request_data=profile.model_dump(),
-    )
-    _raise_workflow_error(state)
-    return {**state.output, "requestId": state.request_id}
-
-
-@app.get("/api/profile")
-def api_profile_analysis(
-    email: str = Query(default="", max_length=254),
-) -> dict[str, Any]:
-    state = _run_api_workflow(
-        user_query="Read profile completeness from consented data.",
-        intent="profile",
-        request_data={"email": email} if email else {},
-    )
-    _raise_workflow_error(state)
-    return {**state.output, "requestId": state.request_id}
+    return {
+        "success": True,
+        "profileId": DEFAULT_REQUESTER_ID,
+        "mode": "demo_fixture",
+    }
 
 
 @app.get("/api/matches")
 def api_matches(
     email: str = Query(default="", max_length=254),
 ) -> list[dict[str, Any]]:
-    state = _run_api_workflow(
-        user_query="Find consented and eligible matching candidates.",
-        intent="matching",
-        request_data={"email": email} if email else {},
+    del email  # The lab maps signed-in frontend users to the consented demo fixture.
+    search = _tool_data(
+        "search_candidates",
+        {"user_id": DEFAULT_REQUESTER_ID, "max_results": 10},
     )
-    _raise_workflow_error(state)
-    return state.output.get("candidates", [])
+    candidates: list[dict[str, Any]] = []
+    for row in search.get("candidates", []):
+        candidate = _candidate_api_model(row["candidate_id"])
+        if candidate is not None:
+            candidates.append(candidate)
+    return sorted(candidates, key=lambda item: item["compatibility"], reverse=True)
+
+
+def _date_plan_indoor_preference(custom_prompt: str | None) -> bool | None:
+    text = (custom_prompt or "").casefold()
+    if any(marker in text for marker in {"ngoài trời", "ngoai troi", "outdoor"}):
+        return False
+    if any(marker in text for marker in {"trong nhà", "trong nha", "indoor"}):
+        return True
+    return None
 
 
 @app.post("/api/date-plan")
 def api_date_plan(request: DatePlanRequest) -> dict[str, Any]:
     candidate_id = _normalize_user_id(request.candidateId)
-    state = _run_api_workflow(
-        user_query=request.customPrompt or "Create a grounded date plan.",
-        intent="date_planning",
-        candidate_id=candidate_id,
-        request_data=request.model_dump(),
+    profile_data = _tool_data(
+        "get_match_profile",
+        {"user_id": candidate_id, "requester_id": DEFAULT_REQUESTER_ID},
     )
-    if state.safety_verdict == "BLOCK":
+    shared = _tool_data(
+        "get_shared_interests",
+        {"user_a_id": DEFAULT_REQUESTER_ID, "user_b_id": candidate_id},
+    )
+    requester = _tool_data(
+        "get_match_profile",
+        {"user_id": DEFAULT_REQUESTER_ID},
+    )
+
+    candidate_profile = profile_data["profile"]
+    requester_profile = requester["profile"]
+    city = candidate_profile.get("city") or requester_profile.get("city") or "Ha Noi"
+    max_budget = (
+        requester_profile.get("date_preferences", {}).get("max_budget")
+        or 500000
+    )
+    activities = _tool_data(
+        "search_date_activities",
+        {
+            "city": city,
+            "interests": shared.get("shared_interests", []),
+            "max_budget": max_budget,
+            "indoor": _date_plan_indoor_preference(request.customPrompt),
+            "max_results": 3,
+        },
+    )
+
+    rows = activities.get("activities", [])
+    if not rows:
         raise HTTPException(
-            status_code=400,
-            detail={
-                "code": "SAFETY_BLOCKED",
-                "message": state.output.get("message", SAFE_FALLBACK_MESSAGE),
-                "requestId": state.request_id,
-            },
+            status_code=404,
+            detail="Không có hoạt động phù hợp với bộ lọc hiện tại.",
         )
-    _raise_workflow_error(state)
-    return {**state.output, "requestId": state.request_id}
+
+    times = ["17:30 - 18:45", "19:00 - 20:30", "20:45 - 21:45"]
+    items = []
+    for index, activity in enumerate(rows):
+        cost = activity["estimated_pair_cost"]
+        items.append(
+            {
+                "step": index + 1,
+                "time": times[index],
+                "title": activity["name"],
+                "location": activity["city"],
+                "description": (
+                    f"Chi phí ước tính {cost:,} VND cho hai người, "
+                    f"thời lượng khoảng {activity['duration_minutes']} phút. "
+                    "Đây là đề xuất, hệ thống chưa đặt chỗ."
+                ),
+                "tag": "Trong nhà" if activity["indoor"] else "Ngoài trời",
+            }
+        )
+
+    shared_interests = shared.get("shared_interests", [])
+    topics = shared_interests[:3] or ["một ngày lý tưởng", "sở thích cuối tuần", "ẩm thực"]
+    questions = [f"Bạn thích điều gì nhất ở chủ đề {topic}?" for topic in topics]
+
+    return {
+        "candidateName": candidate_profile.get("display_name") or candidate_id,
+        "theme": f"Kế hoạch hẹn hò an toàn tại {city}",
+        "items": items,
+        "icebreakerQuestions": questions,
+    }
 
 
 @app.post("/api/chat")
 def api_chat(request: ChatRequest) -> dict[str, Any]:
-    candidate_id = _normalize_user_id(request.candidateId)
-    if _is_date_planning_chat(request.message):
-        state = _run_api_workflow(
-            user_query=request.message,
-            intent="date_planning",
-            candidate_id=candidate_id,
-            city=_extract_chat_city(request.message),
-            max_budget=_extract_chat_budget(request.message),
-            request_data={
-                "candidateId": candidate_id,
-                "customPrompt": request.message,
-                "source": "chat",
-            },
-        )
-        if state.safety_verdict != "BLOCK":
-            _raise_workflow_error(state)
+    if is_safety_blocked(request.message):
         return {
-            "reply": (
-                state.output.get("message", SAFE_FALLBACK_MESSAGE)
-                if state.safety_verdict == "BLOCK"
-                else _format_date_plan_chat_reply(state.output)
-            ),
-            "suggestedTopics": [
-                "Đổi ngân sách",
-                "Không gian ngoài trời",
-                "Câu hỏi phá băng",
-            ],
-            "safetyApproved": state.safety_verdict != "BLOCK",
-            "requestId": state.request_id,
-            "datePlan": state.output if state.safety_verdict != "BLOCK" else None,
+            "reply": SAFE_FALLBACK_MESSAGE,
+            "suggestedTopics": ["Gửi lời mời kết nối trong ứng dụng"],
+            "safetyApproved": False,
         }
 
-    state = _run_api_workflow(
-        user_query=request.message,
-        intent="chat",
-        candidate_id=candidate_id,
+    candidate_id = _normalize_user_id(request.candidateId)
+    _tool_data(
+        "get_match_profile",
+        {"user_id": candidate_id, "requester_id": DEFAULT_REQUESTER_ID},
     )
-    if state.safety_verdict != "BLOCK":
-        _raise_workflow_error(state)
-    return {**state.output, "requestId": state.request_id}
+    reply = run_baseline_chatbot(request.message, get_llm_provider())
+    return {
+        "reply": reply,
+        "suggestedTopics": ["Sở thích chung", "Ranh giới cá nhân", "Kế hoạch cuối tuần"],
+        "safetyApproved": True,
+    }
 
 
 def run_cli_demo() -> None:
