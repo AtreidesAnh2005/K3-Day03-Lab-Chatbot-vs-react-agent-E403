@@ -39,43 +39,7 @@ export function DatePlannerModal({ candidate, isOpen, onClose }: DatePlannerModa
     setLoading(true);
     try {
       const plan = await api.generateDatePlan(candidate.id, prompt);
-      // Customize with candidate name and interests
-      const customizedPlan: DatePlanResponse = {
-        candidateName: candidate.name,
-        theme: `Kế hoạch hẹn hò lãng mạn dành riêng cho bạn & ${candidate.name}`,
-        items: [
-          {
-            step: 1,
-            time: "17:30 - 18:45",
-            title: `Cà phê khởi động tại ${candidate.city}`,
-            location: `Quán cà phê Indie không gian yên tĩnh (${candidate.city})`,
-            description: `Gặp mặt phá băng nhẹ nhàng. Cùng chia sẻ về đam mê ${candidate.interests[0] ?? "cà phê"} và nhịp sống thường ngày.`,
-            tag: "Phá băng",
-          },
-          {
-            step: 2,
-            time: "19:00 - 20:30",
-            title: `Hoạt động trải nghiệm ${candidate.interests[1] ?? "nghệ thuật"}`,
-            location: `Không gian văn hóa / Nhà hàng ẩm thực phù hợp`,
-            description: `Bữa tối ấm cúng và thưởng thức không gian lãng mạn theo đúng phong cách ${candidate.loveLanguage ?? "Quality Time"}.`,
-            tag: "Gắn kết",
-          },
-          {
-            step: 3,
-            time: "20:45 - 21:30",
-            title: "Dạo phố & Trò chuyện sâu",
-            location: `Phố đi bộ / Công viên bờ sông tại ${candidate.city}`,
-            description: `Dạo bước thư giãn, chia sẻ góc nhìn cuộc sống và tạo những kỷ niệm đẹp đầu tiên cùng ${candidate.name}.`,
-            tag: "Kỷ niệm",
-          },
-        ],
-        icebreakerQuestions: [
-          `Điều gì ở công việc trong ngành ${candidate.careerField ?? "sáng tạo"} khiến bạn tự hào nhất?`,
-          `Nếu cùng đi du lịch, chuyến đi mơ ước tiếp theo của ${candidate.name} là gì?`,
-          `Kỷ niệm đáng nhớ nhất của bạn liên quan đến ${candidate.interests[0] ?? "sở thích cá nhân"} là gì?`,
-        ],
-      };
-      setDatePlan(customizedPlan);
+      setDatePlan(plan);
     } catch (err) {
       console.error(err);
     } finally {

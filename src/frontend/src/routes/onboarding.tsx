@@ -12,6 +12,7 @@ import {
   type Question,
   type UserProfile,
 } from "@/lib/cupid-store";
+import { api } from "@/lib/api-client";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -66,7 +67,6 @@ function Onboarding() {
       setStep((s) => s + 1);
       return;
     }
-    // Finalize profile
     const auth = getAuth()!;
     const profile: UserProfile = {
       name: auth.name,
@@ -78,11 +78,13 @@ function Onboarding() {
       createdAt: new Date().toISOString(),
     };
     setEmbedding(true);
-    // Simulated embedding delay — backend will call profile_agent + embed
-    setTimeout(() => {
-      saveProfile(profile);
+    saveProfile(profile);
+    void Promise.all([
+      api.submitProfile(profile),
+      new Promise((resolve) => setTimeout(resolve, 800)),
+    ]).finally(() => {
       navigate({ to: "/profile" });
-    }, 1600);
+    });
   }
 
   function setAnswer(value: string) {

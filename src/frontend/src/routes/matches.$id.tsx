@@ -9,6 +9,7 @@ import {
   personalityLabel,
   type Candidate,
 } from "@/lib/cupid-store";
+import { api } from "@/lib/api-client";
 import { DatePlannerModal } from "@/components/date-planner-modal";
 
 export const Route = createFileRoute("/matches/$id")({
@@ -32,7 +33,8 @@ function MatchDetail() {
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
 
   useEffect(() => {
-    if (!getAuth()) {
+    const auth = getAuth();
+    if (!auth) {
       navigate({ to: "/" });
       return;
     }
@@ -41,8 +43,18 @@ function MatchDetail() {
       navigate({ to: "/onboarding" });
       return;
     }
-    const list = findMatches(p);
-    setCandidate(list.find((c) => c.id === id) ?? null);
+    const localCandidate = findMatches(p).find((item) => item.id === id) ?? null;
+    setCandidate(localCandidate);
+
+    let cancelled = false;
+    void api.getMatches(auth.email).then((remoteCandidates) => {
+      if (!cancelled) {
+        setCandidate(remoteCandidates.find((item) => item.id === id) ?? localCandidate);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [id, navigate]);
 
   if (!candidate) return null;

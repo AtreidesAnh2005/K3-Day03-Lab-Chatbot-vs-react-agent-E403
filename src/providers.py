@@ -24,6 +24,20 @@ class BaseLLMProvider:
         raise NotImplementedError
 
 
+def _latest_observation(prompt: str) -> dict | None:
+    """Extract the last structured Observation embedded by the ReAct runner."""
+    marker = "Observation:\n"
+    marker_index = prompt.rfind(marker)
+    if marker_index < 0:
+        return None
+    raw = prompt[marker_index + len(marker) :].lstrip()
+    try:
+        observation, _ = json.JSONDecoder().raw_decode(raw)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    return observation if isinstance(observation, dict) else None
+
+
 class GeminiProvider(BaseLLMProvider):
     """Google Gemini Provider"""
     def __init__(self, api_key: str = None, model: str = None):
@@ -139,6 +153,70 @@ class MockProvider(BaseLLMProvider):
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         text = prompt.lower()
         is_react = "giao thức react" in system_prompt.lower() or "react agent" in system_prompt.lower()
+        observation = _latest_observation(prompt)
+
+        if is_react and observation:
+            output = observation.get("output") or {}
+            data = output.get("data") or {}
+            tool_name = observation.get("tool")
+
+            if tool_name == "calculate_compatibility":
+                if not data.get("eligible") or not data.get("score_available"):
+                    conflicts = ", ".join(data.get("hard_conflicts") or ["không đủ dữ liệu"])
+                    return (
+                        "Thought: Observation cho thấy cặp hồ sơ không đủ điều kiện để chấm điểm.\n"
+                        "Final Answer: Hai hồ sơ hiện không có điểm tương thích hợp lệ. "
+                        f"Lý do từ công cụ: {conflicts}. Hệ thống không tự nới lỏng hard constraint."
+                    )
+                aligned = [
+                    name
+                    for name, score in (data.get("dimension_scores") or {}).items()
+                    if score == 100
+                ]
+                aligned_text = ", ".join(aligned[:3]) or "các tiêu chí đã chia sẻ"
+                return (
+                    "Thought: Observation đã có điểm và các chiều tương thích cần thiết.\n"
+                    f"Final Answer: Điểm tương thích là {data.get('score')}, "
+                    f"mức tin cậy {data.get('confidence')}. "
+                    f"Các chiều phù hợp nổi bật: {aligned_text}. "
+                    "Đây chỉ là ước lượng từ dữ liệu đã đồng ý chia sẻ, "
+                    "không bảo đảm kết quả mối quan hệ."
+                )
+
+            if tool_name == "get_shared_interests":
+                interests = data.get("shared_interests") or []
+                if not interests:
+                    return (
+                        "Thought: Observation không có sở thích chung để làm căn cứ.\n"
+                        "Final Answer: Hiện chưa có sở thích chung đã được xác nhận. "
+                        "Tôi không tự tạo dữ liệu thay thế."
+                    )
+                serialized_interests = json.dumps(interests, ensure_ascii=False)
+                return (
+                    "Thought: Tôi sẽ dùng đúng sở thích chung từ Observation để tìm hoạt động.\n"
+                    f'Action: search_date_activities["Ha Noi", {serialized_interests}, 500000]'
+                )
+
+            if tool_name == "search_date_activities":
+                activities = data.get("activities") or []
+                if not activities:
+                    return (
+                        "Thought: Observation không tìm thấy hoạt động phù hợp.\n"
+                        "Final Answer: Chưa có hoạt động đáp ứng đồng thời địa điểm và ngân sách. "
+                        "Bạn có thể điều chỉnh một soft preference."
+                    )
+                suggestions = "; ".join(
+                    (
+                        f"{item.get('name')} tại {item.get('city')}, "
+                        f"chi phí ước tính {item.get('estimated_pair_cost')} VND"
+                    )
+                    for item in activities[:2]
+                )
+                return (
+                    "Thought: Observation đã có hoạt động phù hợp để đề xuất.\n"
+                    f"Final Answer: Gợi ý từ công cụ: {suggestions}. "
+                    "Đây chỉ là đề xuất; hệ thống chưa đặt chỗ, liên hệ hoặc thanh toán."
+                )
 
         if "số điện thoại" in text or "so dien thoai" in text or "matching_consent" in text:
             if not is_react:
