@@ -32,6 +32,7 @@ if sys.stdout.encoding != "utf-8":
     except Exception:
         pass
 
+
 try:
     from .prompts import (
         CHATBOT_BASELINE_PROMPT,
