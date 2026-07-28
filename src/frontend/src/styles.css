@@ -1,0 +1,157 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-blush: var(--blush);
+  --color-rose: var(--rose);
+  --color-gold: var(--gold);
+  --font-serif: var(--font-serif);
+  --font-sans: var(--font-sans);
+  --shadow-soft: 0 30px 60px -30px oklch(0.5 0.18 18 / 0.25);
+  --shadow-glow: 0 0 0 1px oklch(0.9 0.08 18 / 0.5), 0 20px 40px -15px oklch(0.6 0.22 18 / 0.35);
+  --gradient-romance: linear-gradient(135deg, oklch(0.96 0.04 20) 0%, oklch(0.92 0.07 15) 50%, oklch(0.88 0.12 25) 100%);
+  --gradient-warm: linear-gradient(180deg, oklch(0.99 0.015 20) 0%, oklch(0.95 0.04 20) 100%);
+}
+
+:root {
+  --radius: 1rem;
+  /* Fonts chuẩn hỗ trợ đầy đủ tiếng Việt không bị lỗi phông */
+  --font-serif: "Playfair Display", "Be Vietnam Pro", Georgia, serif;
+  --font-sans: "Be Vietnam Pro", "Plus Jakarta Sans", system-ui, sans-serif;
+
+  --background: oklch(0.985 0.008 20);
+  --foreground: oklch(0.2 0.03 15);
+
+  --card: oklch(1 0 0 / 85%);
+  --card-foreground: oklch(0.2 0.03 15);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.03 15);
+
+  --primary: oklch(0.58 0.22 18);
+  --primary-foreground: oklch(0.99 0.01 20);
+
+  --secondary: oklch(0.96 0.025 20);
+  --secondary-foreground: oklch(0.35 0.09 18);
+
+  --muted: oklch(0.96 0.015 20);
+  --muted-foreground: oklch(0.48 0.04 18);
+
+  --accent: oklch(0.92 0.07 22);
+  --accent-foreground: oklch(0.25 0.08 15);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.99 0.003 20);
+
+  --border: oklch(0.92 0.02 20);
+  --input: oklch(0.93 0.02 20);
+  --ring: oklch(0.6 0.2 18);
+
+  --blush: oklch(0.94 0.05 20);
+  --rose: oklch(0.58 0.22 18);
+  --gold: oklch(0.8 0.12 75);
+}
+
+.dark {
+  --background: oklch(0.14 0.03 15);
+  --foreground: oklch(0.97 0.01 20);
+  --card: oklch(0.2 0.04 15 / 85%);
+  --card-foreground: oklch(0.97 0.01 20);
+  --popover: oklch(0.2 0.04 15);
+  --popover-foreground: oklch(0.97 0.01 20);
+  --primary: oklch(0.68 0.2 18);
+  --primary-foreground: oklch(0.14 0.03 15);
+  --secondary: oklch(0.25 0.05 15);
+  --secondary-foreground: oklch(0.97 0.01 20);
+  --muted: oklch(0.24 0.03 15);
+  --muted-foreground: oklch(0.72 0.03 20);
+  --accent: oklch(0.38 0.12 20);
+  --accent-foreground: oklch(0.97 0.01 20);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.68 0.2 18);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html, body {
+    font-family: var(--font-sans);
+    line-height: 1.6;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    background-image: radial-gradient(80% 50% at 50% 0%, oklch(0.94 0.05 20 / 0.7), transparent 75%);
+    min-height: 100vh;
+  }
+  h1, h2, h3, .font-display {
+    font-family: var(--font-serif);
+    letter-spacing: -0.015em;
+  }
+}
+
+/* Floating Hearts Keyframe Animation */
+@keyframes float-heart {
+  0% {
+    transform: translateY(0) scale(0.8) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: var(--tw-opacity, 0.5);
+  }
+  50% {
+    transform: translateY(-50vh) scale(1.1) rotate(15deg);
+  }
+  85% {
+    opacity: var(--tw-opacity, 0.5);
+  }
+  100% {
+    transform: translateY(-105vh) scale(0.9) rotate(-15deg);
+    opacity: 0;
+  }
+}
+
+.animate-float-heart {
+  animation: float-heart linear infinite;
+  will-change: transform, opacity;
+}
+
+@utility text-gradient-romance {
+  background: linear-gradient(135deg, oklch(0.58 0.22 18), oklch(0.68 0.18 35));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-gradient-romance {
+  background-image: var(--gradient-romance);
+}
