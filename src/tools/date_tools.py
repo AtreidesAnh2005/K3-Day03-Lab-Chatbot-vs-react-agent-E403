@@ -10,6 +10,45 @@ def suggest_date_plan(profile: dict, candidate: dict) -> dict:
     }
 
 
+def search_date_activities(city: str, interests: list[str], max_budget: int) -> dict:
+    """Search synthetic date activities by city, shared interests, and budget."""
+    normalized_city = city.strip().lower()
+    normalized_interests = {interest.lower() for interest in interests}
+
+    activities = [
+        {
+            "activity_id": "A01",
+            "name": "Workshop làm gốm",
+            "city": "Hanoi",
+            "interests": ["art", "creative"],
+            "estimated_cost": 400000,
+            "indoor": True,
+        },
+        {
+            "activity_id": "A02",
+            "name": "Cafe triển lãm ảnh",
+            "city": "Hanoi",
+            "interests": ["photography", "coffee", "art"],
+            "estimated_cost": 250000,
+            "indoor": True,
+        },
+    ]
+
+    filtered = []
+    for activity in activities:
+        activity_city = activity["city"].lower()
+        activity_interests = {interest.lower() for interest in activity["interests"]}
+        if activity_city != normalized_city:
+            continue
+        if activity["estimated_cost"] > int(max_budget):
+            continue
+        if not activity_interests.intersection(normalized_interests):
+            continue
+        filtered.append(activity)
+
+    return {"activities": filtered}
+
+
 def get_weather(location: str) -> str:
     """
     Look up current weather for a city.
